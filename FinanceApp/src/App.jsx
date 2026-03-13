@@ -6,6 +6,7 @@ import DebtsModule from './components/Debts/DebtsModule';
 import StatsDashboard from './components/Statistics/StatsDashboard';
 import AccountModal from './components/Transactions/AccountModal';
 import CategoryModal from './components/Settings/CategoryModal';
+import CategoryGrid from './components/Settings/CategoryGrid';
 import { db } from './utils/db';
 import { Menu, ChevronDown, Bell } from 'lucide-react';
 
@@ -94,6 +95,7 @@ function App() {
   
   const [editingAccount, setEditingAccount] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [defaultCategoryType, setDefaultCategoryType] = useState('expense');
   const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, accountBalances: [] });
 
   useEffect(() => {
@@ -190,21 +192,15 @@ function App() {
         );
       case 'categories':
         return (
-          <div className="animate-fade">
-            <h2 style={{ marginBottom: '20px' }}>Categorías</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-               {categories.map(cat => (
-                 <div key={cat.id} className="glass" style={{ padding: '16px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px' }} onClick={() => { setEditingCategory(cat); setIsCategoryModalOpen(true); }}>
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: cat.color }} />
-                    <p style={{ flex: 1 }}>{cat.name}</p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{cat.type === 'income' ? 'Ingreso' : 'Gasto'}</p>
-                 </div>
-               ))}
-               <button onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }} className="glass" style={{ padding: '16px', borderRadius: '16px', color: 'var(--primary)', fontWeight: '600', border: '1px dashed var(--primary)' }}>
-                 + Añadir Nueva Categoría
-               </button>
-            </div>
-          </div>
+          <CategoryGrid 
+            categories={categories}
+            onCategoryClick={(cat) => { setEditingCategory(cat); setIsCategoryModalOpen(true); }}
+            onCreateClick={(type) => { 
+              setEditingCategory(null); 
+              setDefaultCategoryType(type);
+              setIsCategoryModalOpen(true); 
+            }}
+          />
         );
       case 'debts': 
         return <DebtsModule debts={debts} totals={totals} onUpdate={loadData} />;
@@ -264,6 +260,7 @@ function App() {
         onSave={handleSaveCategory}
         onDelete={handleDeleteCategory}
         initialData={editingCategory}
+        type={defaultCategoryType}
       />
     </>
   );

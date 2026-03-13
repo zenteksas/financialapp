@@ -2,13 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, Check, Utensils, Car, Home, ShoppingBag, Heart, 
   Gamepad, Briefcase, GraduationCap, Plane, Coffee, 
-  Tv, Zap, Trash2, Tag, Smartphone, PiggyBank, Receipt
+  Tv, Zap, Trash2, Tag, Smartphone, PiggyBank, Receipt,
+  Wallet, Gift, Landmark, HelpCircle, FileText, Users,
+  Dumbbell, Bus, Pizza, Wifi, BarChart3, Bike, Footprints,
+  PawPrint, Power, CreditCard, Ruler
 } from 'lucide-react';
 
 const ICONS = {
   Utensils, Car, Home, ShoppingBag, Heart, Gamepad,
   Briefcase, GraduationCap, Plane, Coffee, Tv, Zap,
-  Smartphone, PiggyBank, Receipt, Tag
+  Smartphone, PiggyBank, Receipt, Tag,
+  Wallet, Gift, Landmark, HelpCircle, FileText, Users,
+  Dumbbell, Bus, Pizza, Wifi, BarChart3, Bike, Footprints,
+  PawPrint, Power, CreditCard, Ruler
 };
 
 const COLORS = [
@@ -58,6 +64,23 @@ const CategoryModal = ({ isOpen, onClose, onSave, onDelete, initialData, type = 
         </div>
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.typeSelector}>
+            <button 
+              type="button" 
+              style={styles.typeBtn(formData.type === 'expense', 'var(--danger)')}
+              onClick={() => setFormData(prev => ({ ...prev, type: 'expense' }))}
+            >
+              GASTO
+            </button>
+            <button 
+              type="button" 
+              style={styles.typeBtn(formData.type === 'income', 'var(--secondary)')}
+              onClick={() => setFormData(prev => ({ ...prev, type: 'income' }))}
+            >
+              INGRESO
+            </button>
+          </div>
+
           <div style={styles.inputGroup}>
             <label style={styles.label}>Nombre</label>
             <input
@@ -140,6 +163,15 @@ const styles = {
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
   closeBtn: { background: 'none', color: 'var(--text-muted)' },
   form: { display: 'flex', flexDirection: 'column', gap: '20px' },
+  typeSelector: {
+    display: 'flex', gap: '8px', backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: '4px', borderRadius: '14px', marginBottom: '8px'
+  },
+  typeBtn: (active, color) => ({
+    flex: 1, padding: '10px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '700',
+    backgroundColor: active ? color : 'transparent', color: active ? 'white' : 'var(--text-muted)',
+    border: 'none', transition: 'all 0.2s', cursor: 'pointer'
+  }),
   inputGroup: { display: 'flex', flexDirection: 'column', gap: '8px' },
   label: { fontSize: '0.8rem', color: 'var(--text-muted)' },
   input: {
