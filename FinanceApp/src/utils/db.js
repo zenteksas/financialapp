@@ -116,8 +116,22 @@ export const db ={
       .reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0);
 
     const financial = txs.reduce((acc, tx) => {
+      if (tx.type === 'transfer') {
+        const fromAcc = accounts.find(a => a.id === tx.fromAccountId);
+        const toAcc = accounts.find(a => a.id === tx.toAccountId);
+        
+        const fromVisible = fromAcc ? fromAcc.includeInTotal : true;
+        const toVisible = toAcc ? toAcc.includeInTotal : true;
+
+        // Balance change only if visibility differs
+        if (fromVisible && !toVisible) acc.balance -= tx.amount;
+        if (!fromVisible && toVisible) acc.balance += tx.amount;
+        // Both visible or both hidden means net change to total balance is 0
+        
+        return acc;
+      }
+
       // Find the account. If not found or if the account is marked FOR inclusion, we count it.
-      // Default behavior: if account is missing (legacy), we assume it's "Efectivo" and include it.
       const account = accounts.find(a => a.id === (tx.accountId || 'default'));
       const shouldInclude = !account || account.includeInTotal;
 
@@ -136,8 +150,20 @@ export const db ={
     const totalDebtQuota = debts.reduce((sum, d) => sum + d.cuotaMinima, 0);
     
     const accountBalances = accounts.map(acc => {
-      const accTxs = txs.filter(t => (t.accountId || 'default') === acc.id);
-      const net = accTxs.reduce((sum, t) => t.type === 'income' ? sum + t.amount : sum - t.amount, 0);
+      const accTxs = txs.filter(t => 
+        (t.type === 'transfer' && (t.fromAccountId === acc.id || t.toAccountId === acc.id)) ||
+        (t.type !== 'transfer' && (t.accountId || 'default') === acc.id)
+      );
+      
+      const net = accTxs.reduce((sum, t) => {
+        if (t.type === 'transfer') {
+          if (t.fromAccountId === acc.id) return sum - t.amount;
+          if (t.toAccountId === acc.id) return sum + t.amount;
+          return sum;
+        }
+        return t.type === 'income' ? sum + t.amount : sum - t.amount;
+      }, 0);
+      
       return { ...acc, currentBalance: (parseFloat(acc.balance) || 0) + net };
     });
 

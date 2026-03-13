@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Search, Tag, Settings, Building2, Wallet, PiggyBank, CreditCard, Coins } from 'lucide-react';
+import { Plus, Search, Tag, Settings, Building2, Wallet, PiggyBank, CreditCard, Coins, MoveRight } from 'lucide-react';
 
 const ICONS = { Building2, Wallet, PiggyBank, CreditCard, Coins };
 
@@ -50,6 +50,29 @@ const TransactionList = ({ transactions, categories, accounts, onAddClick, onAcc
           </div>
         ) : (
           transactions.map((tx) => {
+            if (tx.type === 'transfer') {
+              const fromAcc = accounts.find(a => a.id === tx.fromAccountId) || { name: '?' };
+              const toAcc = accounts.find(a => a.id === tx.toAccountId) || { name: '?' };
+              return (
+                <div key={tx.id} className="glass" style={styles.item}>
+                  <div style={styles.itemIcon('var(--primary)')}>
+                    <MoveRight size={20} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {fromAcc.name} <MoveRight size={14} /> {toAcc.name}
+                    </p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{tx.date} • Transferencia</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontWeight: '700', color: 'var(--text-main)' }}>
+                      ${tx.amount.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+
             const category = categories.find(c => c.id === tx.categoryId) || {};
             return (
               <div key={tx.id} className="glass" style={styles.item}>

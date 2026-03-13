@@ -5,6 +5,8 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts }) => 
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [accountId, setAccountId] = useState(accounts[0]?.id || 'default');
+  const [fromAccountId, setFromAccountId] = useState(accounts[0]?.id || 'default');
+  const [toAccountId, setToAccountId] = useState(accounts[1]?.id || accounts[0]?.id || 'default');
   const [categoryId, setCategoryId] = useState(categories[0]?.id || '');
   const [note, setNote] = useState('');
 
@@ -17,8 +19,10 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts }) => 
     onSave({
       amount: parseFloat(amount),
       type,
-      accountId,
-      categoryId,
+      accountId: type === 'transfer' ? null : accountId,
+      fromAccountId: type === 'transfer' ? fromAccountId : null,
+      toAccountId: type === 'transfer' ? toAccountId : null,
+      categoryId: type === 'transfer' ? null : categoryId,
       note,
       date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
     });
@@ -53,6 +57,13 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts }) => 
             >
               Ingreso
             </button>
+            <button
+              type="button"
+              onClick={() => setType('transfer')}
+              style={styles.typeBtn(type === 'transfer', 'var(--primary)')}
+            >
+              Transferir
+            </button>
           </div>
 
           <div style={styles.inputGroup}>
@@ -69,31 +80,62 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts }) => 
             />
           </div>
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Cuenta</label>
-            <select
-              value={accountId}
-              onChange={(e) => setAccountId(e.target.value)}
-              style={styles.input}
-            >
-              {accounts.map(acc => (
-                <option key={acc.id} value={acc.id}>{acc.name}</option>
-              ))}
-            </select>
-          </div>
+          {type === 'transfer' ? (
+            <>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Desde Cuenta</label>
+                <select
+                  value={fromAccountId}
+                  onChange={(e) => setFromAccountId(e.target.value)}
+                  style={styles.input}
+                >
+                  {accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>{acc.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Hacia Cuenta</label>
+                <select
+                  value={toAccountId}
+                  onChange={(e) => setToAccountId(e.target.value)}
+                  style={styles.input}
+                >
+                  {accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>{acc.name}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          ) : (
+            <>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Cuenta</label>
+                <select
+                  value={accountId}
+                  onChange={(e) => setAccountId(e.target.value)}
+                  style={styles.input}
+                >
+                  {accounts.map(acc => (
+                    <option key={acc.id} value={acc.id}>{acc.name}</option>
+                  ))}
+                </select>
+              </div>
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Categoría</label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              style={styles.input}
-            >
-              {categories.filter(c => c.type === type).map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
+              <div style={styles.inputGroup}>
+                <label style={styles.label}>Categoría</label>
+                <select
+                  value={categoryId}
+                  onChange={(e) => setCategoryId(e.target.value)}
+                  style={styles.input}
+                >
+                  {categories.filter(c => c.type === type).map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
 
           <div style={styles.inputGroup}>
             <label style={styles.label}>Nota (Opcional)</label>

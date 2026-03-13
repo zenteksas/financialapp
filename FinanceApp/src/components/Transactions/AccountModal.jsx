@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check, Building2, Wallet, PiggyBank, CreditCard, Coins, Trash2 } from 'lucide-react';
 
 const ICONS = {
@@ -31,6 +31,20 @@ const AccountModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
   });
 
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        name: '',
+        balance: '',
+        color: COLORS[0],
+        icon: 'Wallet',
+        includeInTotal: true,
+        ...initialData
+      });
+      setIsConfirmingDelete(false);
+    }
+  }, [isOpen, initialData]);
 
   if (!isOpen) return null;
 
