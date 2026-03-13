@@ -113,7 +113,7 @@ const DebtsModule = ({ debts, totals, onUpdate }) => {
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                       <span style={{ fontWeight: '600', fontSize: '1.05rem' }}>{d.nombre}</span>
-                      <span style={{ color: 'var(--primary)', fontWeight: '700' }}>{(d.ea * 100).toFixed(1)}% E.A</span>
+                      <span style={{ color: 'var(--secondary)', fontWeight: '700' }}>{(d.ea * 100).toFixed(1)}% E.A</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <div>
@@ -242,14 +242,15 @@ const styles = {
     width: '100%',
     padding: '16px',
     borderRadius: '18px',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    border: '1px dashed var(--glass-border)',
-    color: 'var(--text-main)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    border: '1px dashed var(--primary)',
+    color: 'var(--secondary)',
     fontWeight: '600',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: '28px',
+    cursor: 'pointer'
   },
   debtList: { display: 'flex', flexDirection: 'column', gap: '16px' },
   debtCard: { padding: '20px', borderRadius: '20px', cursor: 'pointer' },

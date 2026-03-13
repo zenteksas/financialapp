@@ -7,6 +7,9 @@ import StatsDashboard from './components/Statistics/StatsDashboard';
 import AccountModal from './components/Transactions/AccountModal';
 import CategoryModal from './components/Settings/CategoryModal';
 import CategoryGrid from './components/Settings/CategoryGrid';
+import PerformanceStats from './components/Statistics/PerformanceStats';
+import PaymentsModule from './components/Transactions/PaymentsModule';
+import RemindersModule from './components/Settings/RemindersModule';
 import { db } from './utils/db';
 import { Menu, ChevronDown, Bell } from 'lucide-react';
 
@@ -157,8 +160,13 @@ function App() {
   const renderView = () => {
     switch (activeTab) {
       case 'dashboard': 
-      case 'stats':
         return <StatsDashboard transactions={transactions} categories={categories} onAddClick={() => setIsModalOpen(true)} />;
+      case 'stats': 
+        return <PerformanceStats transactions={transactions} />;
+      case 'payments':
+        return <PaymentsModule />;
+      case 'reminders':
+        return <RemindersModule />;
       case 'transactions': 
         return (
           <TransactionList 
