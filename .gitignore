@@ -1,0 +1,11 @@
+# Ignore other projects in this monorepo folder
+DebtCalculator/
+DebtCalculatorCel/
+"Integración de pagos wompi/"
+PythonProjects/
+
+# Standard JS/Node ignores
+node_modules/
+dist/
+.DS_Store
+*.log
