@@ -30,6 +30,8 @@ const AccountModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
     ...initialData
   });
 
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+
   if (!isOpen) return null;
 
   const handleChange = (e) => {
@@ -119,30 +121,42 @@ const AccountModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
               <p style={{ fontWeight: '500', fontSize: '0.95rem' }}>Incluir en Balance General</p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>El saldo sumará al total de la app</p>
             </div>
-            <label style={styles.switch}>
+            <label className="switch" style={styles.switch}>
               <input
                 name="includeInTotal"
                 type="checkbox"
                 checked={formData.includeInTotal}
                 onChange={handleChange}
               />
-              <span style={styles.slider}></span>
+              <span className="slider"></span>
             </label>
           </div>
 
           <div style={styles.footer}>
             <button type="submit" style={styles.saveBtn}>
               <Check size={20} style={{ marginRight: '8px' }} />
-              Guardar Cuenta
+              {formData.id ? 'Guardar Cambios' : 'Crear Cuenta'}
             </button>
             {formData.id && formData.id !== 'default' && (
-              <button 
-                type="button" 
-                onClick={() => { if(confirm('¿Eliminar esta cuenta?')) { onDelete(formData.id); onClose(); }}}
-                style={styles.deleteBtn}
-              >
-                <Trash2 size={20} />
-              </button>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {!isConfirmingDelete ? (
+                  <button 
+                    type="button" 
+                    onClick={() => setIsConfirmingDelete(true)}
+                    style={styles.deleteBtn}
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                ) : (
+                  <button 
+                    type="button" 
+                    onClick={() => onDelete(formData.id)}
+                    style={{ ...styles.deleteBtn, backgroundColor: 'var(--danger)', padding: '0 16px', fontSize: '0.8rem' }}
+                  >
+                    ¿Seguro?
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </form>

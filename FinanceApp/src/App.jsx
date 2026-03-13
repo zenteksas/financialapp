@@ -135,6 +135,7 @@ function App() {
   const handleDeleteAccount = (id) => {
     db.deleteAccount(id);
     loadData();
+    setIsAccountModalOpen(false);
   };
 
   const handleAccountClick = (acc) => {
