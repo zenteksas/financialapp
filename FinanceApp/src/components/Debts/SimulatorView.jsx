@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Scale, Info, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Scale } from 'lucide-react';
 import { DebtMath } from '../../utils/calculations';
 
 const SimulatorView = ({ debts }) => {

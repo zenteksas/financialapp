@@ -5,7 +5,7 @@ import TransactionModal from './components/Transactions/TransactionModal';
 import DebtsModule from './components/Debts/DebtsModule';
 import StatsDashboard from './components/Statistics/StatsDashboard';
 import { db } from './utils/db';
-import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
 const DashboardView = ({ totals, recentTransactions }) => (
   <div className="animate-fade">

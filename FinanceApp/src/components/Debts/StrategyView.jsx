@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Rocket, Info, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Rocket, Info, CheckCircle } from 'lucide-react';
 import { DebtMath } from '../../utils/calculations';
 import { db } from '../../utils/db';
 

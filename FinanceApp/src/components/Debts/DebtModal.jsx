@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check, Info, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, Check, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
 const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
   const [formData, setFormData] = useState({

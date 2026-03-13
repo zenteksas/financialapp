@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Chart from 'react-apexcharts';
-import { Calendar, Filter } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 
 const StatsDashboard = ({ transactions }) => {
   const [filter, setFilter] = useState('monthly');
