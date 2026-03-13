@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import BottomNav from './components/Layout/BottomNav';
+import Sidebar from './components/Layout/Sidebar';
 import TransactionList from './components/Transactions/TransactionList';
 import TransactionModal from './components/Transactions/TransactionModal';
 import DebtsModule from './components/Debts/DebtsModule';
 import StatsDashboard from './components/Statistics/StatsDashboard';
 import AccountModal from './components/Transactions/AccountModal';
+import CategoryModal from './components/Settings/CategoryModal';
 import { db } from './utils/db';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { Menu, ChevronDown, Bell } from 'lucide-react';
 
 const DashboardView = ({ totals, recentTransactions }) => (
   <div className="animate-fade">
@@ -63,38 +64,19 @@ const DashboardView = ({ totals, recentTransactions }) => (
 );
 
 const styles = {
-  balanceCard: {
-    padding: '32px 24px',
-    borderRadius: '32px',
-    backgroundColor: 'var(--surface-color)',
-    position: 'relative',
-    overflow: 'hidden',
+  topBar: {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '16px 20px', backgroundColor: 'var(--bg-color)',
+    position: 'sticky', top: 0, zIndex: 1000
   },
-  summaryRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    paddingTop: '20px',
-    borderTop: '1px solid var(--glass-border)',
-  },
-  summaryItem: {
-    display: 'flex',
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: '0.7rem',
-    color: 'var(--text-muted)',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-  },
-  summaryValue: {
-    fontWeight: '600',
-    fontSize: '0.9rem',
-  },
-  smallItem: {
-    padding: '12px 16px',
-    borderRadius: '16px',
-    display: 'flex',
-    alignItems: 'center',
+  menuBtn: { background: 'none', border: 'none', color: 'var(--text-heading)', cursor: 'pointer' },
+  totalSelector: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
+  totalLabel: { fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' },
+  totalAmount: { fontSize: '1.4rem', fontWeight: '800', color: 'var(--text-heading)' },
+  pageContainer: {
+    padding: '0 20px 100px 20px',
+    maxWidth: '600px',
+    margin: '0 auto',
   }
 };
 
@@ -104,10 +86,15 @@ function App() {
   const [debts, setDebts] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
+  
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  
   const [editingAccount, setEditingAccount] = useState(null);
-  const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, totalDebt: 0, totalDebtQuota: 0, debtRatio: 0, accountBalances: [] });
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, accountBalances: [] });
 
   useEffect(() => {
     loadData();
@@ -151,13 +138,25 @@ function App() {
   const handleSaveTransaction = (newTx) => {
     db.addTransaction(newTx);
     loadData();
-    setActiveTab('transactions');
+    setActiveTab('dashboard');
+  };
+
+  const handleSaveCategory = (data) => {
+    db.addCategory(data);
+    loadData();
+  };
+
+  const handleDeleteCategory = (id) => {
+    db.deleteCategory(id);
+    loadData();
+    setIsCategoryModalOpen(false);
   };
 
   const renderView = () => {
     switch (activeTab) {
       case 'dashboard': 
-        return <DashboardView totals={totals} recentTransactions={transactions} />;
+      case 'stats':
+        return <StatsDashboard transactions={transactions} categories={categories} onAddClick={() => setIsModalOpen(true)} />;
       case 'transactions': 
         return (
           <TransactionList 
@@ -169,29 +168,79 @@ function App() {
             onAddAccount={handleAddAccount}
           />
         );
+      case 'accounts':
+        return (
+          <div className="animate-fade">
+             <h2 style={{ marginBottom: '20px' }}>Mis Cuentas</h2>
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+               {accounts.map(acc => (
+                 <div key={acc.id} className="glass" style={{ padding: '20px', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => handleAccountClick(acc)}>
+                    <div>
+                      <p style={{ fontWeight: '600' }}>{acc.name}</p>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{acc.includeInTotal ? 'Sumado al balance' : 'Oculto'}</p>
+                    </div>
+                    <p style={{ fontWeight: '700', fontSize: '1.2rem' }}>${acc.currentBalance?.toLocaleString()}</p>
+                 </div>
+               ))}
+               <button onClick={handleAddAccount} className="glass" style={{ padding: '16px', borderRadius: '16px', color: 'var(--primary)', fontWeight: '600', border: '1px dashed var(--primary)' }}>
+                 + Añadir Nueva Cuenta
+               </button>
+             </div>
+          </div>
+        );
+      case 'categories':
+        return (
+          <div className="animate-fade">
+            <h2 style={{ marginBottom: '20px' }}>Categorías</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+               {categories.map(cat => (
+                 <div key={cat.id} className="glass" style={{ padding: '16px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '16px' }} onClick={() => { setEditingCategory(cat); setIsCategoryModalOpen(true); }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: cat.color }} />
+                    <p style={{ flex: 1 }}>{cat.name}</p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{cat.type === 'income' ? 'Ingreso' : 'Gasto'}</p>
+                 </div>
+               ))}
+               <button onClick={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }} className="glass" style={{ padding: '16px', borderRadius: '16px', color: 'var(--primary)', fontWeight: '600', border: '1px dashed var(--primary)' }}>
+                 + Añadir Nueva Categoría
+               </button>
+            </div>
+          </div>
+        );
       case 'debts': 
-        return (
-          <DebtsModule 
-            debts={debts} 
-            totals={totals} 
-            onUpdate={loadData} 
-          />
-        );
-      case 'stats': 
-        return (
-          <StatsDashboard transactions={transactions} />
-        );
-      default: return <DashboardView totals={totals} recentTransactions={transactions} />;
+        return <DebtsModule debts={debts} totals={totals} onUpdate={loadData} />;
+      default: return <StatsDashboard transactions={transactions} categories={categories} onAddClick={() => setIsModalOpen(true)} />;
     }
   };
 
   return (
     <>
-      <div className="page-container">
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
+        userName="Ronald Barrera" 
+        totalBalance={totals.balance}
+        activeTab={activeTab}
+        onNavigate={setActiveTab}
+      />
+
+      <div style={styles.topBar}>
+        <button style={styles.menuBtn} onClick={() => setIsSidebarOpen(true)}>
+          <Menu size={28} />
+        </button>
+        <div style={styles.totalSelector}>
+          <span style={styles.totalLabel}>
+            Total <ChevronDown size={14} />
+          </span>
+          <span style={styles.totalAmount}>{totals.balance.toLocaleString()} COL$</span>
+        </div>
+        <button style={styles.menuBtn}>
+          <Bell size={24} />
+        </button>
+      </div>
+
+      <div style={styles.pageContainer}>
         {renderView()}
       </div>
-      
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
       
       <TransactionModal 
         isOpen={isModalOpen} 
@@ -207,6 +256,14 @@ function App() {
         onSave={handleSaveAccount}
         onDelete={handleDeleteAccount}
         initialData={editingAccount}
+      />
+
+      <CategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onSave={handleSaveCategory}
+        onDelete={handleDeleteCategory}
+        initialData={editingCategory}
       />
     </>
   );

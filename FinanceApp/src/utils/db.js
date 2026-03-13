@@ -35,11 +35,25 @@ export const db ={
   // Categories
   getCategories: () => {
     const cats = db.get(DB_KEYS.CATEGORIES);
-    if (cats.length === 0) {
+    if (!cats || cats.length === 0) {
       db.save(DB_KEYS.CATEGORIES, INITIAL_CATEGORIES);
       return INITIAL_CATEGORIES;
     }
     return cats;
+  },
+  addCategory: (category) => {
+    const list = db.getCategories();
+    const newCat = { ...category, id: category.id || Date.now().toString() };
+    const idx = list.findIndex(c => c.id === newCat.id);
+    if (idx !== -1) list[idx] = newCat;
+    else list.push(newCat);
+    db.save(DB_KEYS.CATEGORIES, list);
+    return list;
+  },
+  deleteCategory: (id) => {
+    const list = db.getCategories().filter(c => c.id !== id);
+    db.save(DB_KEYS.CATEGORIES, list);
+    return list;
   },
 
   // Accounts
@@ -174,5 +188,32 @@ export const db ={
       debtRatio: income > 0 ? (totalDebtQuota / income) * 100 : 0,
       accountBalances
     };
+  },
+
+  // Analytics Helpers
+  getTransactionsByPeriod: (period = 'month') => {
+    const txs = db.getTransactions();
+    const now = new Date();
+    
+    return txs.filter(tx => {
+      // Note: In a real app, we'd parse tx.date or have a timestamp
+      // For this demo, we'll assume tx.id (Date.now()) is the timestamp
+      const txDate = new Date(parseInt(tx.id));
+      
+      if (period === 'day') {
+        return txDate.toDateString() === now.toDateString();
+      }
+      if (period === 'week') {
+        const weekStart = new Date(now.setDate(now.getDate() - now.getDay()));
+        return txDate >= weekStart;
+      }
+      if (period === 'month') {
+        return txDate.getMonth() === new Date().getMonth() && txDate.getFullYear() === new Date().getFullYear();
+      }
+      if (period === 'year') {
+        return txDate.getFullYear() === new Date().getFullYear();
+      }
+      return true; // 'periodo' (all)
+    });
   }
 };
