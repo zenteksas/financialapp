@@ -1,8 +1,11 @@
+import React, { useState, useEffect } from 'react';
+import BottomNav from './components/Layout/BottomNav';
+import TransactionList from './components/Transactions/TransactionList';
 import TransactionModal from './components/Transactions/TransactionModal';
 import DebtsModule from './components/Debts/DebtsModule';
 import StatsDashboard from './components/Statistics/StatsDashboard';
 import { db } from './utils/db';
-import { TrendingUp, TrendingDown, Wallet, Settings } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 
 const DashboardView = ({ totals, recentTransactions }) => (
   <div className="animate-fade">

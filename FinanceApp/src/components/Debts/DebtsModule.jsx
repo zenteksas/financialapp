@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+import { Plus, Rocket, Scale, Trash2, Heart } from 'lucide-react';
 import DebtModal from './DebtModal';
 import StrategyView from './StrategyView';
 import SimulatorView from './SimulatorView';
