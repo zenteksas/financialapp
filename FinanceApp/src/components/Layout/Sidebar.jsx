@@ -25,7 +25,7 @@ const Sidebar = ({ isOpen, onClose, userName, totalBalance, onNavigate, activeTa
   return (
     <>
       <div 
-        className={`sidebar-overlay ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} 
+        className={`sidebar-overlay ${isOpen ? 'opacity-100 visible pointer-events-auto' : 'opacity-0 invisible pointer-events-none'}`} 
         onClick={onClose}
       />
       
