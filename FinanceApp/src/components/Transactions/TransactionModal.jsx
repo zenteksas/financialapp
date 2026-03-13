@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { X, Check } from 'lucide-react';
 
-const TransactionModal = ({ isOpen, onClose, onSave, categories }) => {
+const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts }) => {
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
+  const [accountId, setAccountId] = useState(accounts[0]?.id || 'default');
   const [categoryId, setCategoryId] = useState(categories[0]?.id || '');
   const [note, setNote] = useState('');
 
@@ -16,6 +17,7 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories }) => {
     onSave({
       amount: parseFloat(amount),
       type,
+      accountId,
       categoryId,
       note,
       date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
@@ -65,6 +67,19 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories }) => {
               style={styles.input}
               required
             />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Cuenta</label>
+            <select
+              value={accountId}
+              onChange={(e) => setAccountId(e.target.value)}
+              style={styles.input}
+            >
+              {accounts.map(acc => (
+                <option key={acc.id} value={acc.id}>{acc.name}</option>
+              ))}
+            </select>
           </div>
 
           <div style={styles.inputGroup}>

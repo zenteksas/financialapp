@@ -2,15 +2,20 @@ const DB_KEYS = {
   TRANSACTIONS: 'finance_transactions',
   DEBTS: 'finance_debts',
   CATEGORIES: 'finance_categories',
-  USER_PREFS: 'finance_prefs'
+  USER_PREFS: 'finance_prefs',
+  ACCOUNTS: 'finance_accounts'
 };
 
 const INITIAL_CATEGORIES = [
   { id: '1', name: 'Comida', icon: 'Utensils', color: '#f59e0b', type: 'expense' },
   { id: '2', name: 'Transporte', icon: 'Car', color: '#3b82f6', type: 'expense' },
   { id: '3', name: 'Vivienda', icon: 'Home', color: '#ef4444', type: 'expense' },
-  { id: '4', name: 'Salario', icon: 'Wallet', color: '#10b981', type: 'income' },
-  { id: '5', name: 'Otros', icon: 'Circle', color: '#94a3b8', type: 'expense' }
+  { id: '4', name: 'Otros', icon: 'Circle', color: '#94a3b8', type: 'expense' },
+  { id: '5', name: 'Salario', icon: 'Wallet', color: '#10b981', type: 'income' }
+];
+
+const INITIAL_ACCOUNTS = [
+  { id: 'default', name: 'Efectivo', balance: 0, color: '#10b981', icon: 'Wallet', includeInTotal: true }
 ];
 
 export const db ={
@@ -35,6 +40,30 @@ export const db ={
       return INITIAL_CATEGORIES;
     }
     return cats;
+  },
+
+  // Accounts
+  getAccounts: () => {
+    const accs = db.get(DB_KEYS.ACCOUNTS);
+    if (accs.length === 0) {
+      db.save(DB_KEYS.ACCOUNTS, INITIAL_ACCOUNTS);
+      return INITIAL_ACCOUNTS;
+    }
+    return accs;
+  },
+  addAccount: (account) => {
+    const list = db.getAccounts();
+    const newAcc = { ...account, id: account.id || Date.now().toString() };
+    const idx = list.findIndex(a => a.id === newAcc.id);
+    if (idx !== -1) list[idx] = newAcc;
+    else list.push(newAcc);
+    db.save(DB_KEYS.ACCOUNTS, list);
+    return list;
+  },
+  deleteAccount: (id) => {
+    const list = db.getAccounts().filter(a => a.id !== id);
+    db.save(DB_KEYS.ACCOUNTS, list);
+    return list;
   },
 
   // Debts
@@ -78,26 +107,46 @@ export const db ={
   getTotals: () => {
     const txs = db.getTransactions();
     const debts = db.getDebts();
+    const accounts = db.getAccounts();
     const income = db.getIncome();
     
+    // Initial balance from accounts marked for inclusion
+    const initialBalance = accounts
+      .filter(a => a.includeInTotal)
+      .reduce((sum, a) => sum + (parseFloat(a.balance) || 0), 0);
+
     const financial = txs.reduce((acc, tx) => {
-      if (tx.type === 'income') acc.balance += tx.amount;
-      else acc.balance -= tx.amount;
-      
-      if (tx.type === 'income') acc.income += tx.amount;
-      else acc.expenses += tx.amount;
+      // Find the account. If not found or if the account is marked FOR inclusion, we count it.
+      // Default behavior: if account is missing (legacy), we assume it's "Efectivo" and include it.
+      const account = accounts.find(a => a.id === (tx.accountId || 'default'));
+      const shouldInclude = !account || account.includeInTotal;
+
+      if (tx.type === 'income') {
+        if (shouldInclude) acc.balance += tx.amount;
+        acc.income += tx.amount;
+      } else {
+        if (shouldInclude) acc.balance -= tx.amount;
+        acc.expenses += tx.amount;
+      }
       
       return acc;
-    }, { balance: 0, income: 0, expenses: 0 });
+    }, { balance: initialBalance, income: 0, expenses: 0 });
 
     const totalDebt = debts.reduce((sum, d) => sum + d.monto, 0);
     const totalDebtQuota = debts.reduce((sum, d) => sum + d.cuotaMinima, 0);
     
+    const accountBalances = accounts.map(acc => {
+      const accTxs = txs.filter(t => (t.accountId || 'default') === acc.id);
+      const net = accTxs.reduce((sum, t) => t.type === 'income' ? sum + t.amount : sum - t.amount, 0);
+      return { ...acc, currentBalance: (parseFloat(acc.balance) || 0) + net };
+    });
+
     return {
       ...financial,
       totalDebt,
       totalDebtQuota,
-      debtRatio: income > 0 ? (totalDebtQuota / income) * 100 : 0
+      debtRatio: income > 0 ? (totalDebtQuota / income) * 100 : 0,
+      accountBalances
     };
   }
 };

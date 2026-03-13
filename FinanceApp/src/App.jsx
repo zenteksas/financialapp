@@ -4,6 +4,7 @@ import TransactionList from './components/Transactions/TransactionList';
 import TransactionModal from './components/Transactions/TransactionModal';
 import DebtsModule from './components/Debts/DebtsModule';
 import StatsDashboard from './components/Statistics/StatsDashboard';
+import AccountModal from './components/Transactions/AccountModal';
 import { db } from './utils/db';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
@@ -101,9 +102,12 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [transactions, setTransactions] = useState([]);
   const [debts, setDebts] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, totalDebt: 0, totalDebtQuota: 0, debtRatio: 0 });
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [editingAccount, setEditingAccount] = useState(null);
+  const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, totalDebt: 0, totalDebtQuota: 0, debtRatio: 0, accountBalances: [] });
 
   useEffect(() => {
     loadData();
@@ -113,10 +117,34 @@ function App() {
     const txs = db.getTransactions();
     const cats = db.getCategories();
     const ds = db.getDebts();
+    const accs = db.getAccounts();
+    const currentTotals = db.getTotals();
+    
     setTransactions(txs);
     setCategories(cats);
     setDebts(ds);
-    setTotals(db.getTotals());
+    setAccounts(currentTotals.accountBalances || accs);
+    setTotals(currentTotals);
+  };
+
+  const handleSaveAccount = (data) => {
+    db.addAccount(data);
+    loadData();
+  };
+
+  const handleDeleteAccount = (id) => {
+    db.deleteAccount(id);
+    loadData();
+  };
+
+  const handleAccountClick = (acc) => {
+    setEditingAccount(acc);
+    setIsAccountModalOpen(true);
+  };
+
+  const handleAddAccount = () => {
+    setEditingAccount(null);
+    setIsAccountModalOpen(true);
   };
 
   const handleSaveTransaction = (newTx) => {
@@ -134,7 +162,10 @@ function App() {
           <TransactionList 
             transactions={transactions} 
             categories={categories} 
+            accounts={accounts}
             onAddClick={() => setIsModalOpen(true)} 
+            onAccountClick={handleAccountClick}
+            onAddAccount={handleAddAccount}
           />
         );
       case 'debts': 
@@ -166,6 +197,15 @@ function App() {
         onClose={() => setIsModalOpen(false)} 
         onSave={handleSaveTransaction}
         categories={categories}
+        accounts={accounts}
+      />
+
+      <AccountModal
+        isOpen={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
+        onSave={handleSaveAccount}
+        onDelete={handleDeleteAccount}
+        initialData={editingAccount}
       />
     </>
   );

@@ -1,7 +1,9 @@
 import React from 'react';
-import { Plus, Search, Tag } from 'lucide-react';
+import { Plus, Search, Tag, Settings, Building2, Wallet, PiggyBank, CreditCard, Coins } from 'lucide-react';
 
-const TransactionList = ({ transactions, categories, onAddClick }) => {
+const ICONS = { Building2, Wallet, PiggyBank, CreditCard, Coins };
+
+const TransactionList = ({ transactions, categories, accounts, onAddClick, onAccountClick, onAddAccount }) => {
   return (
     <div className="animate-fade">
       <div style={styles.header}>
@@ -10,6 +12,35 @@ const TransactionList = ({ transactions, categories, onAddClick }) => {
           {transactions.length} movimientos realizados
         </p>
       </div>
+
+      <section style={styles.accountsSection}>
+        <div style={styles.sectionHeader}>
+          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Mis Cuentas</h3>
+          <button onClick={onAddAccount} style={styles.addAccBtn}>Nueva</button>
+        </div>
+        <div style={styles.accountsScroll}>
+          {accounts.map(acc => {
+            const Icon = ICONS[acc.icon] || Wallet;
+            return (
+              <div 
+                key={acc.id} 
+                className="glass" 
+                style={styles.accCard(acc.color)}
+                onClick={() => onAccountClick(acc)}
+              >
+                <div style={styles.accIconWrap}>
+                  <Icon size={18} />
+                </div>
+                <div>
+                  <p style={styles.accName}>{acc.name}</p>
+                  <p style={styles.accBalance}>${acc.currentBalance?.toLocaleString() || '0'}</p>
+                </div>
+                {!acc.includeInTotal && <div style={styles.hiddenIndicator} title="No suma al balance" />}
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       <div style={styles.listContainer}>
         {transactions.length === 0 ? (
@@ -55,6 +86,25 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
+    marginTop: '24px',
+  },
+  accountsSection: { marginBottom: '24px' },
+  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
+  addAccBtn: { fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600', padding: '4px 8px', borderRadius: '8px', background: 'rgba(79, 70, 229, 0.1)' },
+  accountsScroll: {
+    display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '8px',
+    msOverflowStyle: 'none', scrollbarWidth: 'none',
+  },
+  accCard: (color) => ({
+    flex: '0 0 140px', padding: '16px', borderRadius: '20px', cursor: 'pointer',
+    borderLeft: `4px solid ${color}`, position: 'relative',
+  }),
+  accIconWrap: { marginBottom: '12px', color: 'var(--text-muted)' },
+  accName: { fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '2px' },
+  accBalance: { fontSize: '1rem', fontWeight: '700' },
+  hiddenIndicator: {
+    position: 'absolute', top: '10px', right: '10px', width: '6px', height: '6px',
+    borderRadius: '50%', backgroundColor: 'var(--text-muted)', opacity: 0.5
   },
   emptyState: {
     padding: '60px 20px',
