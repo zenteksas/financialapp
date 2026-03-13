@@ -40,6 +40,8 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: FinanceApp
+        env:
+          CI: false
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
