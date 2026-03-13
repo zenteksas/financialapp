@@ -124,3 +124,10 @@ button, input, select, textarea {
   color: inherit;
   font-family: inherit;
 }
+
+/* Fix for white-on-white dropdowns in some mobile browsers */
+select option {
+  background-color: var(--surface-color);
+  color: var(--text-main);
+}
+
