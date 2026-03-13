@@ -3,7 +3,9 @@ const DB_KEYS = {
   DEBTS: 'finance_debts',
   CATEGORIES: 'finance_categories',
   USER_PREFS: 'finance_prefs',
-  ACCOUNTS: 'finance_accounts'
+  ACCOUNTS: 'finance_accounts',
+  PAYMENTS: 'finance_payments',
+  REMINDERS: 'finance_reminders'
 };
 
 const INITIAL_CATEGORIES = [
@@ -77,6 +79,23 @@ export const db ={
   deleteAccount: (id) => {
     const list = db.getAccounts().filter(a => a.id !== id);
     db.save(DB_KEYS.ACCOUNTS, list);
+    return list;
+  },
+
+  // Payments (Recurring)
+  getPayments: () => db.get(DB_KEYS.PAYMENTS),
+  addPayment: (payment) => {
+    const list = db.getPayments();
+    const newPay = { ...payment, id: payment.id || Date.now().toString() };
+    const idx = list.findIndex(p => p.id === newPay.id);
+    if (idx !== -1) list[idx] = newPay;
+    else list.push(newPay);
+    db.save(DB_KEYS.PAYMENTS, list);
+    return list;
+  },
+  deletePayment: (id) => {
+    const list = db.getPayments().filter(p => p.id !== id);
+    db.save(DB_KEYS.PAYMENTS, list);
     return list;
   },
 

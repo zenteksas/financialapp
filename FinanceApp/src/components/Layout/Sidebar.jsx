@@ -10,6 +10,7 @@ const Sidebar = ({ isOpen, onClose, userName, totalBalance, onNavigate, activeTa
     { id: 'accounts', label: 'Cuentas', icon: Wallet },
     { id: 'stats', label: 'Gráficos', icon: PieChart },
     { id: 'categories', label: 'Categorías', icon: Tag },
+    { id: 'debts', label: 'Deudas', icon: Wallet },
     { id: 'payments', label: 'Pagos habituales', icon: Repeat },
     { id: 'reminders', label: 'Recordatorios', icon: Bell },
     { id: 'settings', label: 'Ajustes', icon: Settings },
