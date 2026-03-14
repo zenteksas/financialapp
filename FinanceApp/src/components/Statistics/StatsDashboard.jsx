@@ -108,11 +108,19 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
               show: true,
               total: {
                 show: true,
-                label: '',
-                formatter: () => `${(grandTotal / 1000).toFixed(2)} MCOL$`,
-                color: 'var(--text-heading)',
-                fontSize: '1.2rem',
-                fontWeight: '700'
+                label: 'TOTAL',
+                formatter: () => `$${grandTotal.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`,
+                color: 'var(--text-muted)',
+                fontSize: '0.8rem',
+                fontWeight: '600',
+                value: {
+                  show: true,
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  color: 'var(--text-heading)',
+                  offsetY: 6,
+                  formatter: () => currency
+                }
               }
             }
           }
@@ -196,7 +204,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
                 <span style={styles.catName}>{cat.name}</span>
                 <div style={styles.catValues}>
                   <span style={styles.catPercent}>{cat.percentage.toFixed(0)} %</span>
-                  <span style={styles.catAmount}>{cat.amount.toLocaleString()} COL$</span>
+                  <span style={styles.catAmount}>{cat.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</span>
                 </div>
               </div>
               <ChevronDown size={14} style={{ color: 'var(--secondary)', opacity: 0.5 }} />

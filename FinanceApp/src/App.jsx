@@ -102,6 +102,7 @@ function App() {
   const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, accountBalances: [] });
   const [selectedAccountId, setSelectedAccountId] = useState(null); // null means "All accounts"
   const [isAccountSelectorOpen, setIsAccountSelectorOpen] = useState(false);
+  const [currency, setCurrency] = useState('COP');
 
   useEffect(() => {
     loadData();
@@ -113,12 +114,14 @@ function App() {
     const ds = db.getDebts();
     const accs = db.getAccounts();
     const currentTotals = db.getTotals();
+    const currentCurrency = db.getCurrency();
     
     setTransactions(txs);
     setCategories(cats);
     setDebts(ds);
     setAccounts(currentTotals.accountBalances || accs);
     setTotals(currentTotals);
+    setCurrency(currentCurrency);
   };
 
   const handleSaveAccount = (data) => {
@@ -222,7 +225,50 @@ function App() {
         );
       case 'debts': 
         return <DebtsModule debts={debts} totals={totals} onUpdate={loadData} />;
-      default: return <StatsDashboard transactions={transactions} categories={categories} onAddClick={() => setIsModalOpen(true)} />;
+      case 'settings':
+        return (
+          <div className="animate-fade">
+            <h2 style={{ marginBottom: '24px' }}>Ajustes</h2>
+            <div className="glass" style={{ padding: '24px', borderRadius: '24px' }}>
+              <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>Tipo de Divisa</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {['COP', 'USD', 'EUR'].map(curr => (
+                  <button 
+                    key={curr}
+                    className="glass"
+                    style={{ 
+                      padding: '16px', 
+                      borderRadius: '16px', 
+                      border: currency === curr ? '2px solid var(--secondary)' : '1px solid rgba(255,255,255,0.05)',
+                      textAlign: 'left',
+                      fontWeight: '600',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}
+                    onClick={() => {
+                      db.saveCurrency(curr);
+                      setCurrency(curr);
+                    }}
+                  >
+                    <span>{curr === 'COP' ? 'Peso Colombiano (COP)' : curr === 'USD' ? 'Dólar Estadounidense (USD)' : 'Euro (EUR)'}</span>
+                    {currency === curr && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--secondary)' }} />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      default: return (
+        <StatsDashboard 
+          transactions={transactions} 
+          categories={categories} 
+          onAddClick={() => setIsModalOpen(true)}
+          selectedAccountId={selectedAccountId}
+          accounts={accounts}
+          currency={currency}
+        />
+      );
     }
   };
 
@@ -235,6 +281,7 @@ function App() {
         totalBalance={totals.balance}
         activeTab={activeTab}
         onNavigate={setActiveTab}
+        currency={currency}
       />
 
       <div style={styles.topBar}>
@@ -250,9 +297,9 @@ function App() {
           </span>
           <span style={styles.totalAmount}>
             {selectedAccountId 
-              ? accounts.find(a => a.id === selectedAccountId)?.currentBalance?.toLocaleString() 
-              : totals.balance.toLocaleString()
-            } COL$
+              ? accounts.find(a => a.id === selectedAccountId)?.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) 
+              : totals.balance.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+            } {currency}
           </span>
         </button>
         <button style={styles.menuBtn}>
@@ -310,7 +357,7 @@ function App() {
                   onClick={() => { setSelectedAccountId(acc.id); setIsAccountSelectorOpen(false); }}
                 >
                   <span style={{ fontWeight: '600' }}>{acc.name}</span>
-                  <span style={{ fontWeight: '700' }}>${acc.currentBalance?.toLocaleString()}</span>
+                  <span style={{ fontWeight: '700' }}>{acc.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</span>
                 </button>
               ))}
             </div>

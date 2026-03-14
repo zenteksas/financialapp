@@ -4,7 +4,7 @@ import {
   CircleOff, Share2, Star, MessageSquare, RefreshCw, X
 } from 'lucide-react';
 
-const Sidebar = ({ isOpen, onClose, userName, totalBalance, onNavigate, activeTab }) => {
+const Sidebar = ({ isOpen, onClose, userName, totalBalance, onNavigate, activeTab, currency }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Inicio', icon: Home },
     { id: 'accounts', label: 'Cuentas', icon: Wallet },
@@ -38,7 +38,7 @@ const Sidebar = ({ isOpen, onClose, userName, totalBalance, onNavigate, activeTa
             </div>
             <div style={styles.profileInfo}>
               <h3 style={styles.userName}>{userName}</h3>
-              <p style={styles.userBalance}>Balance: {totalBalance.toLocaleString()} COL$</p>
+              <p style={styles.userBalance}>Balance: {totalBalance.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
             </div>
           </div>
           <button onClick={onClose} style={styles.closeBtn}>

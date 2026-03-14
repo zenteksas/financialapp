@@ -5,7 +5,8 @@ const DB_KEYS = {
   USER_PREFS: 'finance_prefs',
   ACCOUNTS: 'finance_accounts',
   PAYMENTS: 'finance_payments',
-  REMINDERS: 'finance_reminders'
+  REMINDERS: 'finance_reminders',
+  CURRENCY: 'finance_currency'
 };
 
 const INITIAL_CATEGORIES = [
@@ -134,6 +135,14 @@ export const db ={
   saveScheduledPayments: (sp) => {
     const prefs = db.get(DB_KEYS.USER_PREFS);
     db.save(DB_KEYS.USER_PREFS, { ...prefs, scheduledPayments: sp });
+  },
+
+  // Currency
+  getCurrency: () => {
+    return localStorage.getItem(DB_KEYS.CURRENCY) || 'COP';
+  },
+  saveCurrency: (currency) => {
+    localStorage.setItem(DB_KEYS.CURRENCY, currency);
   },
 
   // Calculate totals
