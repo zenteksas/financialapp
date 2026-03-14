@@ -4,21 +4,68 @@ import { ChevronLeft, ChevronRight, Utensils, Car, Home, ShoppingBag, Heart, Gam
 
 const ICONS = { Utensils, Car, Home, ShoppingBag, Heart, Gamepad, Briefcase, GraduationCap, Plane, Coffee, Tv, Zap, Smartphone, PiggyBank, Receipt, Tag };
 
-const StatsDashboard = ({ transactions, categories, onAddClick }) => {
+const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountId, accounts }) => {
   const [type, setType] = useState('expense');
-  const [period, setPeriod] = useState('week');
-  const [rangeLabel, setRangeLabel] = useState('9 mar – 15 mar');
+  const [period, setPeriod] = useState('semana');
+  const [rangeLabel, setRangeLabel] = useState('');
+  const [customRange, setCustomRange] = useState({ start: '', end: '' });
+  const [isPickingRange, setIsPickingRange] = useState(false);
   const [series, setSeries] = useState([]);
   const [chartOptions, setChartOptions] = useState({});
   const [categoryBreakdown, setCategoryBreakdown] = useState([]);
 
   useEffect(() => {
     processData();
-  }, [transactions, categories, type, period]);
+  }, [transactions, categories, type, period, selectedAccountId, customRange]);
 
   const processData = () => {
-    // Filter by type
-    const filteredTxs = transactions.filter(t => t.type === type);
+    // Filter by account
+    let filteredTxs = transactions;
+    if (selectedAccountId) {
+      filteredTxs = transactions.filter(t => 
+        (t.type === 'transfer' && (t.fromAccountId === selectedAccountId || t.toAccountId === selectedAccountId)) ||
+        (t.type !== 'transfer' && (t.accountId || 'default') === selectedAccountId)
+      );
+    }
+
+    // Filter by period
+    const now = new Date();
+    filteredTxs = filteredTxs.filter(tx => {
+      const txDate = new Date(parseInt(tx.id));
+      if (period === 'día') {
+        return txDate.toDateString() === now.toDateString();
+      }
+      if (period === 'semana') {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        startOfWeek.setHours(0,0,0,0);
+        return txDate >= startOfWeek;
+      }
+      if (period === 'mes') {
+        return txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+      }
+      if (period === 'año') {
+        return txDate.getFullYear() === now.getFullYear();
+      }
+      if (period === 'período' && customRange.start && customRange.end) {
+        const start = new Date(customRange.start);
+        const end = new Date(customRange.end);
+        end.setHours(23, 59, 59, 999);
+        return txDate >= start && txDate <= end;
+      }
+      return true;
+    });
+
+    // Update range label
+    if (period === 'día') setRangeLabel(now.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }));
+    else if (period === 'semana') setRangeLabel('Esta semana');
+    else if (period === 'mes') setRangeLabel(now.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }));
+    else if (period === 'año') setRangeLabel(now.getFullYear().toString());
+    else if (period === 'período' && customRange.start) setRangeLabel(`${customRange.start} – ${customRange.end}`);
+    else setRangeLabel('Todo el tiempo');
+
+    // Filter by type (income/expense)
+    filteredTxs = filteredTxs.filter(t => t.type === type);
     
     // Group by category
     const totals = {};
@@ -98,12 +145,24 @@ const StatsDashboard = ({ transactions, categories, onAddClick }) => {
           <button 
             key={p} 
             style={styles.periodBtn(period === p.toLowerCase())}
-            onClick={() => setPeriod(p.toLowerCase())}
+            onClick={() => {
+              setPeriod(p.toLowerCase());
+              if (p === 'Período') setIsPickingRange(true);
+            }}
           >
             {p}
           </button>
         ))}
       </div>
+
+      {isPickingRange && (
+        <div className="glass" style={{ padding: '16px', marginBottom: '16px', borderRadius: '16px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', justifyContent: 'center' }}>
+          <input type="date" value={customRange.start} onChange={e => setCustomRange(prev => ({ ...prev, start: e.target.value }))} style={styles.dateInput} />
+          <span style={{ color: 'var(--text-muted)' }}>–</span>
+          <input type="date" value={customRange.end} onChange={e => setCustomRange(prev => ({ ...prev, end: e.target.value }))} style={styles.dateInput} />
+          <button className="glass" style={{ padding: '6px 12px', borderRadius: '8px', color: 'var(--secondary)', border: '1px solid var(--secondary)' }} onClick={() => setIsPickingRange(false)}>OK</button>
+        </div>
+      )}
 
       <div className="glass" style={styles.chartCard}>
         <div style={styles.rangeNav}>
@@ -200,7 +259,11 @@ const styles = {
   catValues: { display: 'flex', gap: '8px', alignItems: 'center' },
   catPercent: { color: 'var(--text-muted)', fontSize: '0.85rem' },
   catAmount: { color: 'var(--text-heading)', fontWeight: '600', fontSize: '1rem' },
+  dateInput: {
+    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+    color: 'var(--text-main)', padding: '6px 10px', borderRadius: '8px',
+    outline: 'none', fontSize: '0.85rem'
+  }
 };
 
 export default StatsDashboard;
-

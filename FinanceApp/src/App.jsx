@@ -100,6 +100,8 @@ function App() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [defaultCategoryType, setDefaultCategoryType] = useState('expense');
   const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, accountBalances: [] });
+  const [selectedAccountId, setSelectedAccountId] = useState(null); // null means "All accounts"
+  const [isAccountSelectorOpen, setIsAccountSelectorOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -160,7 +162,15 @@ function App() {
   const renderView = () => {
     switch (activeTab) {
       case 'dashboard': 
-        return <StatsDashboard transactions={transactions} categories={categories} onAddClick={() => setIsModalOpen(true)} />;
+        return (
+          <StatsDashboard 
+            transactions={transactions} 
+            categories={categories} 
+            onAddClick={() => setIsModalOpen(true)}
+            selectedAccountId={selectedAccountId}
+            accounts={accounts}
+          />
+        );
       case 'stats': 
         return <PerformanceStats transactions={transactions} />;
       case 'payments':
@@ -231,12 +241,20 @@ function App() {
         <button style={styles.menuBtn} onClick={() => setIsSidebarOpen(true)}>
           <Menu size={28} />
         </button>
-        <div style={styles.totalSelector}>
+        <button 
+          style={{ ...styles.menuBtn, ...styles.totalSelector }} 
+          onClick={() => setIsAccountSelectorOpen(true)}
+        >
           <span style={styles.totalLabel}>
-            Total <ChevronDown size={14} />
+            {selectedAccountId ? accounts.find(a => a.id === selectedAccountId)?.name : 'Total'} <ChevronDown size={14} />
           </span>
-          <span style={styles.totalAmount}>{totals.balance.toLocaleString()} COL$</span>
-        </div>
+          <span style={styles.totalAmount}>
+            {selectedAccountId 
+              ? accounts.find(a => a.id === selectedAccountId)?.currentBalance?.toLocaleString() 
+              : totals.balance.toLocaleString()
+            } COL$
+          </span>
+        </button>
         <button style={styles.menuBtn}>
           <Bell size={24} />
         </button>
@@ -270,6 +288,35 @@ function App() {
         initialData={editingCategory}
         type={defaultCategoryType}
       />
+
+      {/* Account Selector Modal */}
+      {isAccountSelectorOpen && (
+        <div className="modal-overlay" onClick={() => setIsAccountSelectorOpen(false)}>
+          <div className="glass modal-content animate-slide-up" onClick={e => e.stopPropagation()} style={{ padding: '24px', borderRadius: '32px 32px 0 0', position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: '600px', margin: '0 auto' }}>
+            <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Seleccionar Cuenta</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button 
+                className="glass" 
+                style={{ padding: '16px', borderRadius: '16px', border: !selectedAccountId ? '2px solid var(--secondary)' : 'none', textAlign: 'left', fontWeight: '600' }}
+                onClick={() => { setSelectedAccountId(null); setIsAccountSelectorOpen(false); }}
+              >
+                Todas las cuentas
+              </button>
+              {accounts.map(acc => (
+                <button 
+                  key={acc.id} 
+                  className="glass" 
+                  style={{ padding: '16px', borderRadius: '16px', border: selectedAccountId === acc.id ? '2px solid var(--secondary)' : 'none', textAlign: 'left', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  onClick={() => { setSelectedAccountId(acc.id); setIsAccountSelectorOpen(false); }}
+                >
+                  <span style={{ fontWeight: '600' }}>{acc.name}</span>
+                  <span style={{ fontWeight: '700' }}>${acc.currentBalance?.toLocaleString()}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
