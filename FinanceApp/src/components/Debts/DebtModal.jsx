@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Check, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 
 const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency }) => {
@@ -11,11 +11,32 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency })
     cuotaManejo: '0',
     seguros: '0',
     abonoAdicional: '0',
-    ...initialData,
-    ea: initialData?.ea ? (initialData.ea * 100).toString() : '',
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setFormData({
+          ...initialData,
+          ea: (initialData.ea * 100).toString(),
+        });
+      } else {
+        setFormData({
+          nombre: '',
+          monto: '',
+          ea: '',
+          cuotas: '0',
+          cuotaMinima: '',
+          cuotaManejo: '0',
+          seguros: '0',
+          abonoAdicional: '0',
+        });
+      }
+      setShowAdvanced(false);
+    }
+  }, [isOpen, initialData]);
 
   if (!isOpen) return null;
 
