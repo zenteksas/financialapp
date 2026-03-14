@@ -1,14 +1,28 @@
-import React, { useState } from 'react';
-import { X, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Check, Plus, Tag } from 'lucide-react';
 
-const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, currency }) => {
+const ICONS = { Tag }; // Fallback for simple display
+
+const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, currency, onAddCategory, initialCategoryId }) => {
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [accountId, setAccountId] = useState(accounts[0]?.id || 'default');
   const [fromAccountId, setFromAccountId] = useState(accounts[0]?.id || 'default');
   const [toAccountId, setToAccountId] = useState(accounts[1]?.id || accounts[0]?.id || 'default');
-  const [categoryId, setCategoryId] = useState(categories[0]?.id || '');
+  const [categoryId, setCategoryId] = useState(initialCategoryId || categories.filter(c => c.type === type)[0]?.id || '');
   const [note, setNote] = useState('');
+
+  useEffect(() => {
+    if (initialCategoryId) setCategoryId(initialCategoryId);
+  }, [initialCategoryId]);
+
+  // Update default category when type changes
+  useEffect(() => {
+    if (!initialCategoryId) {
+      const firstCat = categories.find(c => c.type === type);
+      if (firstCat) setCategoryId(firstCat.id);
+    }
+  }, [type, categories]);
 
   if (!isOpen) return null;
 
@@ -124,15 +138,30 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
 
               <div style={styles.inputGroup}>
                 <label style={styles.label}>Categoría</label>
-                <select
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
-                  style={styles.input}
-                >
+                <div style={styles.categoryGrid}>
                   {categories.filter(c => c.type === type).map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setCategoryId(cat.id)}
+                      style={styles.categoryChip(categoryId === cat.id, cat.color)}
+                    >
+                      <span style={{ fontSize: '1.2rem', marginBottom: '4px' }}>
+                        {/* We could use real icons here if we imported them, but for now we'll use a dot if tag is missed */}
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: cat.color }} />
+                      </span>
+                      <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>{cat.name}</span>
+                    </button>
                   ))}
-                </select>
+                  <button
+                    type="button"
+                    onClick={() => onAddCategory(type)}
+                    style={styles.addCategoryChip}
+                  >
+                    <Plus size={18} color="var(--primary)" />
+                    <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--primary)' }}>Agregar</span>
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -221,6 +250,36 @@ const styles = {
     color: 'var(--text-main)',
     fontSize: '1rem',
     outline: 'none',
+  },
+  categoryGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+    gap: '10px',
+    marginTop: '8px',
+  },
+  categoryChip: (active, color) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '12px 8px',
+    borderRadius: '16px',
+    backgroundColor: active ? `${color}25` : 'rgba(255,255,255,0.03)',
+    border: `1px solid ${active ? color : 'var(--glass-border)'}`,
+    color: active ? 'white' : 'var(--text-muted)',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  }),
+  addCategoryChip: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '12px 8px',
+    borderRadius: '16px',
+    backgroundColor: 'rgba(74, 222, 128, 0.05)',
+    border: '1px dashed var(--primary)',
+    cursor: 'pointer',
   },
   saveBtn: {
     width: '100%',

@@ -106,6 +106,7 @@ function App() {
   const [editingAccount, setEditingAccount] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
   const [defaultCategoryType, setDefaultCategoryType] = useState('expense');
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, accountBalances: [] });
   const [selectedAccountId, setSelectedAccountId] = useState(null); // null means "All accounts"
   const [isAccountSelectorOpen, setIsAccountSelectorOpen] = useState(false);
@@ -147,6 +148,7 @@ function App() {
 
   const handleSaveTransaction = (newTx) => {
     db.addTransaction(newTx);
+    setSelectedCategoryId(null); // Clear after use
     loadData();
     setActiveTab('dashboard');
   };
@@ -154,6 +156,12 @@ function App() {
   const handleSaveCategory = (data) => {
     db.addCategory(data);
     loadData();
+    // Use the name to find the one we just added if it's new
+    if (!data.id) {
+      const updatedCats = db.getCategories();
+      const newCat = updatedCats.find(c => c.name === data.name);
+      if (newCat) setSelectedCategoryId(newCat.id);
+    }
   };
 
   const handleDeleteCategory = (id) => {
@@ -360,11 +368,16 @@ function App() {
       
       <TransactionModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        onClose={() => setIsModalOpen(false)}
         onSave={handleSaveTransaction}
         categories={categories}
         accounts={accounts}
         currency={currency}
+        onAddCategory={(type) => {
+          setDefaultCategoryType(type);
+          setIsCategoryModalOpen(true);
+        }}
+        initialCategoryId={selectedCategoryId}
       />
 
       <AccountModal
