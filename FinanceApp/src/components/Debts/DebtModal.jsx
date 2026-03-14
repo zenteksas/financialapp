@@ -64,7 +64,7 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Monto Adeudado ($)</label>
+            <label style={styles.label}>Monto Adeudado ({currency})</label>
             <input
               name="monto"
               type="number"
@@ -91,7 +91,7 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={styles.label}>Cuota Mínima ($)</label>
+              <label style={styles.label}>Cuota Mínima ({currency})</label>
               <input
                 name="cuotaMinima"
                 type="number"

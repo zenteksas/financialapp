@@ -3,7 +3,7 @@ import { Plus, Search, Tag, Settings, Building2, Wallet, PiggyBank, CreditCard, 
 
 const ICONS = { Building2, Wallet, PiggyBank, CreditCard, Coins };
 
-const TransactionList = ({ transactions, categories, accounts, onAddClick, onAccountClick, onAddAccount }) => {
+const TransactionList = ({ transactions, categories, accounts, onAddClick, onAccountClick, onAddAccount, currency }) => {
   return (
     <div className="animate-fade">
       <div style={styles.header}>
@@ -33,7 +33,7 @@ const TransactionList = ({ transactions, categories, accounts, onAddClick, onAcc
                 </div>
                 <div>
                   <p style={styles.accName}>{acc.name}</p>
-                  <p style={styles.accBalance}>${acc.currentBalance?.toLocaleString() || '0'}</p>
+                  <p style={styles.accBalance}>{acc.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
                 </div>
                 {!acc.includeInTotal && <div style={styles.hiddenIndicator} title="No suma al balance" />}
               </div>
@@ -66,7 +66,7 @@ const TransactionList = ({ transactions, categories, accounts, onAddClick, onAcc
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ fontWeight: '700', color: 'var(--text-main)' }}>
-                      ${tx.amount.toFixed(2)}
+                      {tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
                     </p>
                   </div>
                 </div>
@@ -85,7 +85,7 @@ const TransactionList = ({ transactions, categories, accounts, onAddClick, onAcc
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={styles.amount(tx.type)}>
-                    {tx.type === 'income' ? '+' : '-'}${tx.amount.toFixed(2)}
+                    {tx.type === 'income' ? '+' : '-'}{tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
                   </p>
                 </div>
               </div>

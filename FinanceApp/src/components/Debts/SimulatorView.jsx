@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Scale } from 'lucide-react';
 import { DebtMath } from '../../utils/calculations';
 
-const SimulatorView = ({ debts }) => {
+const SimulatorView = ({ debts, currency }) => {
   const [inputs, setInputs] = useState({
     ea: '15.0',
     term: '60',
@@ -42,7 +42,7 @@ const SimulatorView = ({ debts }) => {
             <input name="term" type="number" value={inputs.term} onChange={handleChange} style={styles.input} />
           </div>
           <div style={{ flex: 1 }}>
-            <label style={styles.label}>Seguros ($)</label>
+            <label style={styles.label}>Seguros ({currency})</label>
             <input name="insurance" type="number" value={inputs.insurance} onChange={handleChange} style={styles.input} />
           </div>
         </div>
@@ -61,12 +61,12 @@ const SimulatorView = ({ debts }) => {
             <div style={styles.compRow}>
               <div style={styles.compItem}>
                 <span style={styles.compLabel}>Actual</span>
-                <p style={styles.compVal}>${results.statu_quo.cuota_mensual.toLocaleString()}</p>
+                <p style={styles.compVal}>{results.statu_quo.cuota_mensual.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
                 <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Cuota Global</span>
               </div>
               <div style={styles.compItem}>
                 <span style={{ ...styles.compLabel, color: 'var(--primary)' }}>Nueva</span>
-                <p style={{ ...styles.compVal, color: 'var(--primary)' }}>${results.nueva_oferta.cuota_mensual.toLocaleString()}</p>
+                <p style={{ ...styles.compVal, color: 'var(--primary)' }}>{results.nueva_oferta.cuota_mensual.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
                 <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Cuota Global</span>
               </div>
             </div>
@@ -75,13 +75,13 @@ const SimulatorView = ({ debts }) => {
               <div style={styles.detailItem}>
                 <span style={styles.detailLabel}>Efecto Liquidez:</span>
                 <span style={{ color: results.analisis.ahorro_mensual > 0 ? 'var(--secondary)' : 'var(--danger)', fontWeight: '600' }}>
-                  ${results.analisis.ahorro_mensual.toLocaleString()} /mes
+                  {results.analisis.ahorro_mensual.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency} /mes
                 </span>
               </div>
               <div style={styles.detailItem}>
                 <span style={styles.detailLabel}>Ahorro Total:</span>
                 <span style={{ color: results.analisis.ahorro_total_dinero > 0 ? 'var(--secondary)' : 'var(--danger)', fontWeight: '600' }}>
-                  ${results.analisis.ahorro_total_dinero.toLocaleString()}
+                  {results.analisis.ahorro_total_dinero.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
                 </span>
               </div>
             </div>

@@ -3,7 +3,7 @@ import { Rocket, Info, CheckCircle } from 'lucide-react';
 import { DebtMath } from '../../utils/calculations';
 import { db } from '../../utils/db';
 
-const StrategyView = ({ debts }) => {
+const StrategyView = ({ debts, currency }) => {
   const [strategy, setStrategy] = useState('snowball');
   const [extraMonthly, setExtraMonthly] = useState('0');
   const [results, setResults] = useState(null);
@@ -42,7 +42,7 @@ const StrategyView = ({ debts }) => {
         </div>
 
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Abono Extra Mensual ($)</label>
+          <label style={styles.label}>Abono Extra Mensual ({currency})</label>
           <input 
             type="number" 
             value={extraMonthly}

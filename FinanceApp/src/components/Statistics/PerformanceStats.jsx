@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import Chart from 'react-apexcharts';
 import { TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 
-const PerformanceStats = ({ transactions }) => {
+const PerformanceStats = ({ transactions, currency }) => {
   const [period, setPeriod] = useState('monthly');
   const [series, setSeries] = useState([]);
   const [options, setOptions] = useState({});
 
   useEffect(() => {
     generateChartData();
-  }, [transactions, period]);
+  }, [transactions, period, currency]);
 
   const generateChartData = () => {
     const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -59,7 +59,7 @@ const PerformanceStats = ({ transactions }) => {
         axisBorder: { show: false },
         axisTicks: { show: false }
       },
-      yaxis: { labels: { formatter: (val) => `$${(val / 1000).toFixed(0)}k` } },
+      yaxis: { labels: { formatter: (val) => `${(val / 1000).toFixed(1)}k ${currency}` } },
       fill: { opacity: 1 },
       legend: { position: 'top', horizontalAlign: 'right' },
       grid: { borderColor: 'var(--glass-border)', strokeDashArray: 4 },
@@ -84,7 +84,7 @@ const PerformanceStats = ({ transactions }) => {
           </div>
           <div>
             <p style={styles.metricLabel}>Total Ingresos</p>
-            <h3 style={styles.metricValue}>${totalIncome.toLocaleString()}</h3>
+            <h3 style={styles.metricValue}>{totalIncome.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</h3>
           </div>
         </div>
         <div className="glass" style={styles.metricCard}>
@@ -93,7 +93,7 @@ const PerformanceStats = ({ transactions }) => {
           </div>
           <div>
             <p style={styles.metricLabel}>Total Gastos</p>
-            <h3 style={styles.metricValue}>${totalExpense.toLocaleString()}</h3>
+            <h3 style={styles.metricValue}>{totalExpense.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</h3>
           </div>
         </div>
       </div>

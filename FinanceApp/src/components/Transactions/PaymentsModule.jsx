@@ -5,7 +5,7 @@ import PaymentModal from './PaymentModal';
 
 const ICONS = { Tv, Zap, Shield, Home, ShoppingBag, Heart };
 
-const PaymentsModule = () => {
+const PaymentsModule = ({ currency }) => {
   const [payments, setPayments] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState(null);
@@ -46,7 +46,7 @@ const PaymentsModule = () => {
                 <p style={styles.meta}>{payment.category || 'Varios'} • Día {payment.date}</p>
               </div>
               <div style={styles.amountArea}>
-                <p style={styles.amount}>${payment.amount.toLocaleString()}</p>
+                <p style={styles.amount}>{payment.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
                 <MoreVertical size={16} style={{ color: 'var(--text-muted)' }} />
               </div>
             </div>
@@ -61,7 +61,7 @@ const PaymentsModule = () => {
 
       <div className="glass" style={styles.totalCard}>
         <p style={styles.totalLabel}>Total Mensual Habitual</p>
-        <h2 style={styles.totalValue}>${totalMonthly.toLocaleString()}</h2>
+        <h2 style={styles.totalValue}>{totalMonthly.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</h2>
       </div>
 
       <PaymentModal 

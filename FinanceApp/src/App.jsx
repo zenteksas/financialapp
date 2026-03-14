@@ -13,7 +13,7 @@ import RemindersModule from './components/Settings/RemindersModule';
 import { db } from './utils/db';
 import { Menu, ChevronDown, Bell } from 'lucide-react';
 
-const DashboardView = ({ totals, recentTransactions }) => (
+const DashboardView = ({ totals, recentTransactions, currency }) => (
   <div className="animate-fade">
     <header style={{ marginBottom: '32px' }}>
       <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Hola, Ronald</h1>
@@ -23,7 +23,7 @@ const DashboardView = ({ totals, recentTransactions }) => (
     <div className="glass" style={styles.balanceCard}>
       <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Saldo Total</p>
       <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '24px' }}>
-        ${totals.balance.toFixed(2)}
+        {totals.balance.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
       </h2>
       
       <div style={styles.summaryRow}>
@@ -31,14 +31,14 @@ const DashboardView = ({ totals, recentTransactions }) => (
           <TrendingUp size={16} color="var(--secondary)" style={{ marginRight: '6px' }} />
           <div>
             <p style={styles.summaryLabel}>Ingresos</p>
-            <p style={styles.summaryValue}>+${totals.income.toFixed(2)}</p>
+            <p style={styles.summaryValue}>+{totals.income.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
           </div>
         </div>
         <div style={styles.summaryItem}>
           <TrendingDown size={16} color="var(--danger)" style={{ marginRight: '6px' }} />
           <div>
             <p style={styles.summaryLabel}>Gastos</p>
-            <p style={styles.summaryValue}>-${totals.expenses.toFixed(2)}</p>
+            <p style={styles.summaryValue}>-{totals.expenses.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
           </div>
         </div>
       </div>
@@ -57,7 +57,7 @@ const DashboardView = ({ totals, recentTransactions }) => (
                 <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{tx.date}</p>
               </div>
               <p style={{ fontWeight: '600', color: tx.type === 'income' ? 'var(--secondary)' : 'var(--danger)', fontSize: '0.9rem' }}>
-                {tx.type === 'income' ? '+' : '-'}${tx.amount.toFixed(2)}
+                {tx.type === 'income' ? '+' : '-'}{tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
               </p>
             </div>
           ))}
@@ -175,11 +175,11 @@ function App() {
           />
         );
       case 'stats': 
-        return <PerformanceStats transactions={transactions} />;
+        return <PerformanceStats transactions={transactions} currency={currency} />;
       case 'payments':
-        return <PaymentsModule />;
+        return <PaymentsModule currency={currency} />;
       case 'reminders':
-        return <RemindersModule />;
+        return <RemindersModule currency={currency} />;
       case 'transactions': 
         return (
           <TransactionList 
@@ -189,6 +189,7 @@ function App() {
             onAddClick={() => setIsModalOpen(true)} 
             onAccountClick={handleAccountClick}
             onAddAccount={handleAddAccount}
+            currency={currency}
           />
         );
       case 'accounts':
@@ -202,7 +203,7 @@ function App() {
                       <p style={{ fontWeight: '600' }}>{acc.name}</p>
                       <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{acc.includeInTotal ? 'Sumado al balance' : 'Oculto'}</p>
                     </div>
-                    <p style={{ fontWeight: '700', fontSize: '1.2rem' }}>${acc.currentBalance?.toLocaleString()}</p>
+                    <p style={{ fontWeight: '700', fontSize: '1.2rem' }}>{acc.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
                  </div>
                ))}
                <button onClick={handleAddAccount} className="glass" style={{ padding: '16px', borderRadius: '16px', color: 'var(--primary)', fontWeight: '600', border: '1px dashed var(--primary)' }}>
@@ -224,7 +225,7 @@ function App() {
           />
         );
       case 'debts': 
-        return <DebtsModule debts={debts} totals={totals} onUpdate={loadData} />;
+        return <DebtsModule debts={debts} totals={totals} onUpdate={loadData} currency={currency} />;
       case 'settings':
         return (
           <div className="animate-fade">
@@ -317,6 +318,7 @@ function App() {
         onSave={handleSaveTransaction}
         categories={categories}
         accounts={accounts}
+        currency={currency}
       />
 
       <AccountModal
@@ -325,6 +327,7 @@ function App() {
         onSave={handleSaveAccount}
         onDelete={handleDeleteAccount}
         initialData={editingAccount}
+        currency={currency}
       />
 
       <CategoryModal

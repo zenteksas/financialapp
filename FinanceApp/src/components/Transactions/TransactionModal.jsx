@@ -67,7 +67,7 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts }) => 
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Monto</label>
+            <label style={styles.label}>Monto ({currency})</label>
             <input
               autoFocus
               type="number"

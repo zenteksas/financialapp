@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, Utensils, Car, Home, ShoppingBag, Heart, Gam
 
 const ICONS = { Utensils, Car, Home, ShoppingBag, Heart, Gamepad, Briefcase, GraduationCap, Plane, Coffee, Tv, Zap, Smartphone, PiggyBank, Receipt, Tag };
 
-const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountId, accounts }) => {
+const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountId, accounts, currency }) => {
   const [type, setType] = useState('expense');
   const [period, setPeriod] = useState('semana');
   const [rangeLabel, setRangeLabel] = useState('');

@@ -61,7 +61,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
 
           <div style={styles.row}>
             <div style={{ flex: 1 }}>
-              <label style={styles.label}>Monto ($)</label>
+              <label style={styles.label}>Monto ({currency})</label>
               <input
                 type="number"
                 placeholder="0"

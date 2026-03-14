@@ -5,7 +5,7 @@ import StrategyView from './StrategyView';
 import SimulatorView from './SimulatorView';
 import { db } from '../../utils/db';
 
-const DebtsModule = ({ debts, totals, onUpdate }) => {
+const DebtsModule = ({ debts, totals, onUpdate, currency }) => {
   const [activeSubTab, setActiveSubTab] = useState('list');
   const [editingDebt, setEditingDebt] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,11 +85,11 @@ const DebtsModule = ({ debts, totals, onUpdate }) => {
             <div className="glass" style={styles.summaryCard}>
               <div style={styles.summaryItem}>
                 <span style={styles.summaryLabel}>Deuda Total</span>
-                <h2 style={styles.summaryVal}>${totals.totalDebt.toLocaleString()}</h2>
+                <h2 style={styles.summaryVal}>{totals.totalDebt.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</h2>
               </div>
               <div style={styles.summaryItem}>
                 <span style={styles.summaryLabel}>Cuota Mensual</span>
-                <h2 style={styles.summaryVal}>${totals.totalDebtQuota.toLocaleString()}</h2>
+                <h2 style={styles.summaryVal}>{totals.totalDebtQuota.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</h2>
               </div>
             </div>
 
@@ -118,11 +118,11 @@ const DebtsModule = ({ debts, totals, onUpdate }) => {
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <div>
                         <p style={styles.cardLabel}>Monto</p>
-                        <p style={styles.cardVal}>${d.monto.toLocaleString()}</p>
+                        <p style={styles.cardVal}>{d.monto.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
                       </div>
                       <div style={{ textAlign: 'right' }}>
                         <p style={styles.cardLabel}>Cuota Mín.</p>
-                        <p style={styles.cardVal}>${d.cuotaMinima.toLocaleString()}</p>
+                        <p style={styles.cardVal}>{d.cuotaMinima.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
                       </div>
                     </div>
                   </div>
@@ -133,11 +133,11 @@ const DebtsModule = ({ debts, totals, onUpdate }) => {
         )}
 
         {activeSubTab === 'strategy' && (
-          <StrategyView debts={debts} />
+          <StrategyView debts={debts} currency={currency} />
         )}
 
         {activeSubTab === 'sim' && (
-          <SimulatorView debts={debts} />
+          <SimulatorView debts={debts} currency={currency} />
         )}
       </main>
 

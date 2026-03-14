@@ -89,7 +89,7 @@ const AccountModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Saldo Inicial ($)</label>
+            <label style={styles.label}>Saldo Inicial ({currency})</label>
             <input
               name="balance"
               type="number"
