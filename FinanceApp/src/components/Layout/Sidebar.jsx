@@ -1,10 +1,22 @@
 import React from 'react';
 import { 
   Home, Wallet, PieChart, Tag, Repeat, Bell, Settings, 
-  CircleOff, Share2, Star, MessageSquare, RefreshCw, X
+  CircleOff, Share2, Star, MessageSquare, RefreshCw, X,
+  User, Smile, Heart, Zap, Coffee, Gamepad, Rocket
 } from 'lucide-react';
 
-const Sidebar = ({ isOpen, onClose, userName, totalBalance, onNavigate, activeTab, currency }) => {
+const AVATAR_ICONS = { User, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star };
+
+const Sidebar = ({ isOpen, onClose, userProfile, totalBalance, onNavigate, activeTab, currency }) => {
+  const userName = userProfile?.name || 'Usuario';
+  const initials = userName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  const AvatarIcon = AVATAR_ICONS[userProfile?.avatar];
   const menuItems = [
     { id: 'dashboard', label: 'Inicio', icon: Home },
     { id: 'accounts', label: 'Cuentas', icon: Wallet },
@@ -33,8 +45,16 @@ const Sidebar = ({ isOpen, onClose, userName, totalBalance, onNavigate, activeTa
       <div className={`sidebar-drawer ${isOpen ? 'animate-slide-in' : 'animate-slide-out'}`}>
         <div style={styles.header}>
           <div style={styles.profileArea}>
-            <div style={styles.avatar}>
-              <img src={`https://ui-avatars.com/api/?name=${userName}&background=random`} alt="profile" style={styles.avatarImg} />
+            <div style={{ ...styles.avatar, backgroundColor: 'var(--primary-light)' }}>
+              {AvatarIcon ? (
+                <div style={styles.avatarFlex}>
+                  <AvatarIcon size={32} color="var(--primary)" />
+                </div>
+              ) : (
+                <div style={styles.avatarFlex}>
+                  <span style={styles.initials}>{initials}</span>
+                </div>
+              )}
             </div>
             <div style={styles.profileInfo}>
               <h3 style={styles.userName}>{userName}</h3>
@@ -103,6 +123,11 @@ const styles = {
     overflow: 'hidden',
     border: '2px solid var(--primary)',
   },
+  avatarFlex: { 
+    width: '100%', height: '100%', display: 'flex', 
+    alignItems: 'center', justifyContent: 'center' 
+  },
+  initials: { fontSize: '1.4rem', fontWeight: '800', color: 'var(--primary)' },
   avatarImg: { width: '100%', height: '100%', objectFit: 'cover' },
   profileInfo: {
     display: 'flex',

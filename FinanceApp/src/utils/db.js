@@ -6,7 +6,8 @@ const DB_KEYS = {
   ACCOUNTS: 'finance_accounts',
   PAYMENTS: 'finance_payments',
   REMINDERS: 'finance_reminders',
-  CURRENCY: 'finance_currency'
+  CURRENCY: 'finance_currency',
+  PROFILE: 'finance_profile'
 };
 
 const INITIAL_CATEGORIES = [
@@ -143,6 +144,19 @@ export const db ={
   },
   saveCurrency: (currency) => {
     localStorage.setItem(DB_KEYS.CURRENCY, currency);
+  },
+
+  // Profile
+  getProfile: () => {
+    const defaultProfile = {
+      name: '',
+      avatar: '', // Icon name or empty for initials
+      onboardingComplete: false
+    };
+    return JSON.parse(localStorage.getItem(DB_KEYS.PROFILE)) || defaultProfile;
+  },
+  saveProfile: (profile) => {
+    localStorage.setItem(DB_KEYS.PROFILE, JSON.stringify(profile));
   },
 
   // Calculate totals

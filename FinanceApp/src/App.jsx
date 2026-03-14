@@ -10,13 +10,17 @@ import CategoryGrid from './components/Settings/CategoryGrid';
 import PerformanceStats from './components/Statistics/PerformanceStats';
 import PaymentsModule from './components/Transactions/PaymentsModule';
 import RemindersModule from './components/Settings/RemindersModule';
+import OnboardingView from './components/Onboarding/OnboardingView';
+import ProfileModal from './components/Settings/ProfileModal';
 import { db } from './utils/db';
-import { Menu, ChevronDown, Bell } from 'lucide-react';
+import { Menu, ChevronDown, Bell, User, Edit2, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star } from 'lucide-react';
 
-const DashboardView = ({ totals, recentTransactions, currency }) => (
+const AVATAR_ICONS = { User, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star };
+
+const DashboardView = ({ totals, recentTransactions, currency, userProfile }) => (
   <div className="animate-fade">
     <header style={{ marginBottom: '32px' }}>
-      <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Hola, Ronald</h1>
+      <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Hola, {userProfile?.name || 'Usuario'}</h1>
       <p style={{ color: 'var(--text-muted)' }}>Bienvenido a tu Gestor de Finanzas</p>
     </header>
 
@@ -90,11 +94,14 @@ function App() {
   const [debts, setDebts] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [userProfile, setUserProfile] = useState(db.getProfile());
+  const [currency, setCurrency] = useState(db.getCurrency());
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   
   const [editingAccount, setEditingAccount] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -102,26 +109,19 @@ function App() {
   const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, accountBalances: [] });
   const [selectedAccountId, setSelectedAccountId] = useState(null); // null means "All accounts"
   const [isAccountSelectorOpen, setIsAccountSelectorOpen] = useState(false);
-  const [currency, setCurrency] = useState('COP');
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = () => {
-    const txs = db.getTransactions();
-    const cats = db.getCategories();
-    const ds = db.getDebts();
-    const accs = db.getAccounts();
-    const currentTotals = db.getTotals();
-    const currentCurrency = db.getCurrency();
-    
-    setTransactions(txs);
-    setCategories(cats);
-    setDebts(ds);
-    setAccounts(currentTotals.accountBalances || accs);
-    setTotals(currentTotals);
-    setCurrency(currentCurrency);
+    setTransactions(db.getTransactions());
+    setDebts(db.getDebts());
+    setAccounts(db.getAccounts());
+    setCategories(db.getCategories());
+    setUserProfile(db.getProfile());
+    setCurrency(db.getCurrency());
+    setTotals(db.getTotals());
   };
 
   const handleSaveAccount = (data) => {
@@ -162,6 +162,22 @@ function App() {
     setIsCategoryModalOpen(false);
   };
 
+  const handleSaveProfile = (data) => {
+    db.saveProfile(data);
+    loadData();
+  };
+
+  const handleOnboardingComplete = ({ profile, currency, initialAccount }) => {
+    db.saveProfile(profile);
+    db.saveCurrency(currency);
+    db.addAccount(initialAccount);
+    loadData();
+  };
+
+  if (!userProfile.onboardingComplete) {
+    return <OnboardingView onComplete={handleOnboardingComplete} />;
+  }
+
   const renderView = () => {
     switch (activeTab) {
       case 'dashboard': 
@@ -173,6 +189,7 @@ function App() {
             selectedAccountId={selectedAccountId}
             accounts={accounts}
             currency={currency}
+            userProfile={userProfile}
           />
         );
       case 'stats': 
@@ -231,6 +248,33 @@ function App() {
         return (
           <div className="animate-fade">
             <h2 style={{ marginBottom: '24px' }}>Ajustes</h2>
+            <div className="glass" style={{ padding: '24px', borderRadius: '24px', marginBottom: '24px' }}>
+              <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>Mi Perfil</h4>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                <div style={{ width: '60px', height: '60px', borderRadius: '20px', backgroundColor: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {(() => {
+                    const AvatarIcon = AVATAR_ICONS[userProfile.avatar];
+                    if (AvatarIcon) return <AvatarIcon color="var(--primary)" size={30} />;
+                    return (
+                      <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '1.25rem' }}>
+                        {userProfile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                      </span>
+                    );
+                  })()}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontWeight: '600', fontSize: '1.1rem' }}>{userProfile.name}</p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Toca el lápiz para editar tu información</p>
+                </div>
+                <button 
+                  onClick={() => setIsProfileModalOpen(true)}
+                  style={{ background: 'none', color: 'var(--primary)', cursor: 'pointer' }}
+                >
+                  <Edit2 size={20} />
+                </button>
+              </div>
+            </div>
+
             <div className="glass" style={{ padding: '24px', borderRadius: '24px' }}>
               <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>Tipo de Divisa</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -269,6 +313,7 @@ function App() {
           selectedAccountId={selectedAccountId}
           accounts={accounts}
           currency={currency}
+          userProfile={userProfile}
         />
       );
     }
@@ -278,11 +323,11 @@ function App() {
     <>
       <Sidebar 
         isOpen={isSidebarOpen} 
-        onClose={() => setIsSidebarOpen(false)} 
-        userName="Ronald Barrera" 
+        onClose={() => setIsSidebarOpen(false)}
+        userProfile={userProfile}
         totalBalance={totals.balance}
-        activeTab={activeTab}
         onNavigate={setActiveTab}
+        activeTab={activeTab}
         currency={currency}
       />
 
@@ -338,8 +383,15 @@ function App() {
         onDelete={handleDeleteCategory}
         initialData={editingCategory}
         type={defaultCategoryType}
+        currency={currency}
       />
 
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onSave={handleSaveProfile}
+        initialData={userProfile}
+      />
       {/* Account Selector Modal */}
       {isAccountSelectorOpen && (
         <div className="modal-overlay" onClick={() => setIsAccountSelectorOpen(false)}>

@@ -109,7 +109,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
               total: {
                 show: true,
                 label: 'TOTAL',
-                formatter: () => `$${grandTotal.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`,
+                formatter: () => `${grandTotal.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`,
                 color: 'var(--text-muted)',
                 fontSize: '0.8rem',
                 fontWeight: '600',
