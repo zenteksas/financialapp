@@ -20,7 +20,7 @@ const COLORS = [
   '#06b6d4'  // Cyan
 ];
 
-const AccountModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
+const AccountModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency }) => {
   const [formData, setFormData] = useState({
     name: '',
     balance: '',

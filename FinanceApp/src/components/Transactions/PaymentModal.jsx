@@ -4,7 +4,7 @@ import { X, Check, Tv, Zap, Shield, Home, ShoppingBag, Heart, Trash2 } from 'luc
 const ICONS = { Tv, Zap, Shield, Home, ShoppingBag, Heart };
 const COLORS = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#E50914'];
 
-const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData }) => {
+const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency }) => {
   const [formData, setFormData] = useState({
     name: '',
     amount: '',

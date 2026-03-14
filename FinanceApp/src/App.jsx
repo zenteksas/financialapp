@@ -172,6 +172,7 @@ function App() {
             onAddClick={() => setIsModalOpen(true)}
             selectedAccountId={selectedAccountId}
             accounts={accounts}
+            currency={currency}
           />
         );
       case 'stats': 

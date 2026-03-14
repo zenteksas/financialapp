@@ -70,6 +70,7 @@ const PaymentsModule = ({ currency }) => {
         onSave={handleSave}
         onDelete={handleDelete}
         initialData={editingPayment}
+        currency={currency}
       />
     </div>
   );

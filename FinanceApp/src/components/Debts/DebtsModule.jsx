@@ -147,6 +147,7 @@ const DebtsModule = ({ debts, totals, onUpdate, currency }) => {
         onSave={handleSave}
         onDelete={handleDelete}
         initialData={editingDebt}
+        currency={currency}
       />
 
       {isIncomeModalOpen && (

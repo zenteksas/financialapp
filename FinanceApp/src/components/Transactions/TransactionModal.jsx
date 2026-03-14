@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Check } from 'lucide-react';
 
-const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts }) => {
+const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, currency }) => {
   const [type, setType] = useState('expense');
   const [amount, setAmount] = useState('');
   const [accountId, setAccountId] = useState(accounts[0]?.id || 'default');
