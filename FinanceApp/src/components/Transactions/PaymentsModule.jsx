@@ -90,9 +90,10 @@ const styles = {
   amountArea: { textAlign: 'right', display: 'flex', alignItems: 'center', gap: '12px' },
   amount: { fontWeight: '700', fontSize: '1rem', color: 'var(--text-main)' },
   addBtn: {
-    padding: '20px', borderRadius: '20px', border: '1px dashed var(--primary)',
-    color: 'var(--secondary)', fontWeight: '600', background: 'none', cursor: 'pointer',
-    display: 'flex', alignItems: 'center', justifyContent: 'center'
+    padding: '18px', borderRadius: '20px', border: '1px dashed var(--primary)',
+    color: 'var(--primary)', fontWeight: '700', background: 'rgba(74, 222, 128, 0.05)', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%',
+    marginTop: '8px'
   },
   totalCard: { padding: '24px', borderRadius: '28px', backgroundColor: 'var(--surface-color)', textAlign: 'center' },
   totalLabel: { fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '4px' },

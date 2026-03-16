@@ -12,7 +12,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency
     icon: 'Tv',
     color: COLORS[0],
     category: 'Ocio',
-    ...initialData
+    ...(initialData || {})
   });
 
   useEffect(() => {
@@ -24,7 +24,7 @@ const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency
         icon: 'Tv',
         color: COLORS[0],
         category: 'Ocio',
-        ...initialData
+        ...(initialData || {})
       });
     }
   }, [isOpen, initialData]);
@@ -161,6 +161,8 @@ const styles = {
   modal: { 
     width: '100%', 
     maxWidth: '600px',
+    maxHeight: '90vh',
+    overflowY: 'auto',
     borderTopLeftRadius: '32px', 
     borderTopRightRadius: '32px', 
     padding: '32px 24px calc(32px + var(--safe-area-bottom))',
