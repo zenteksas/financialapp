@@ -31,14 +31,22 @@ const DashboardView = ({ totals, recentTransactions, currency, userProfile }) =>
       </h2>
       
       <div style={styles.summaryRow}>
-        <div style={styles.summaryItem}>
+        <div 
+          style={{ ...styles.summaryItem, cursor: 'pointer' }}
+          onClick={() => onEditGoals('income')}
+          title="Editar meta de ingresos"
+        >
           <TrendingUp size={16} color="var(--secondary)" style={{ marginRight: '6px' }} />
           <div>
             <p style={styles.summaryLabel}>Ingresos</p>
             <p style={styles.summaryValue}>+{totals.income.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
           </div>
         </div>
-        <div style={styles.summaryItem}>
+        <div 
+          style={{ ...styles.summaryItem, cursor: 'pointer' }}
+          onClick={() => onEditGoals('expense')}
+          title="Editar meta de gastos"
+        >
           <TrendingDown size={16} color="var(--danger)" style={{ marginRight: '6px' }} />
           <div>
             <p style={styles.summaryLabel}>Gastos</p>
@@ -110,6 +118,9 @@ function App() {
   const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, accountBalances: [] });
   const [selectedAccountId, setSelectedAccountId] = useState(null); // null means "All accounts"
   const [isAccountSelectorOpen, setIsAccountSelectorOpen] = useState(false);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [goalModalType, setGoalModalType] = useState('income'); // 'income' or 'expense'
+  const [goalInputValue, setGoalInputValue] = useState(0);
 
   useEffect(() => {
     loadData();
@@ -198,6 +209,11 @@ function App() {
             accounts={accounts}
             currency={currency}
             userProfile={userProfile}
+            onEditGoals={(type) => {
+              setGoalModalType(type);
+              setGoalInputValue(type === 'income' ? db.getIncome() : db.getExpectedExpenses());
+              setIsGoalModalOpen(true);
+            }}
           />
         );
       case 'stats': 
@@ -322,6 +338,11 @@ function App() {
           accounts={accounts}
           currency={currency}
           userProfile={userProfile}
+          onEditGoals={(type) => {
+            setGoalModalType(type);
+            setGoalInputValue(type === 'income' ? db.getIncome() : db.getExpectedExpenses());
+            setIsGoalModalOpen(true);
+          }}
         />
       );
     }
@@ -429,6 +450,52 @@ function App() {
                   <span style={{ fontWeight: '700' }}>{acc.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</span>
                 </button>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Goal Edit Modal */}
+      {isGoalModalOpen && (
+        <div className="modal-overlay" onClick={() => setIsGoalModalOpen(false)}>
+          <div className="glass modal-content animate-slide-up" onClick={e => e.stopPropagation()} style={{ padding: '24px', borderRadius: '32px 32px 0 0', position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: '600px', margin: '0 auto' }}>
+            <h3 style={{ marginBottom: '12px', textAlign: 'center' }}>
+              {goalModalType === 'income' ? 'Editar Meta de Ingresos' : 'Editar Meta de Gastos'}
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', marginBottom: '20px' }}>
+              Define tu valor mensual esperado para calcular tu salud financiera.
+            </p>
+            <div style={{ marginBottom: '20px' }}>
+              <input 
+                type="number" 
+                value={goalInputValue}
+                onChange={(e) => setGoalInputValue(e.target.value)}
+                placeholder="Ej: 3000000"
+                style={{
+                  width: '100%', padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--glass-border)', color: 'white', outline: 'none', fontSize: '1.1rem'
+                }}
+                autoFocus
+              />
+            </div>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={() => setIsGoalModalOpen(false)} 
+                style={{ flex: 1, padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', fontWeight: '600' }}
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={() => { 
+                  if (goalModalType === 'income') db.saveIncome(parseFloat(goalInputValue) || 0);
+                  else db.saveExpectedExpenses(parseFloat(goalInputValue) || 0);
+                  loadData();
+                  setIsGoalModalOpen(false); 
+                }}
+                style={{ flex: 1, padding: '16px', borderRadius: '16px', background: 'var(--primary)', color: 'white', fontWeight: '700' }}
+              >
+                Actualizar
+              </button>
             </div>
           </div>
         </div>

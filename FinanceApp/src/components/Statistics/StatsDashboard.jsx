@@ -105,23 +105,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
           donut: {
             size: '80%',
             labels: {
-              show: true,
-              total: {
-                show: true,
-                label: 'TOTAL',
-                formatter: () => `${grandTotal.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency}`,
-                color: 'var(--text-muted)',
-                fontSize: '0.8rem',
-                fontWeight: '600',
-                value: {
-                  show: true,
-                  fontSize: '1.5rem',
-                  fontWeight: '700',
-                  color: 'var(--text-heading)',
-                  offsetY: 6,
-                  formatter: () => currency
-                }
-              }
+              show: false, // Moved outside for stability
             }
           }
         }
@@ -129,8 +113,22 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
     });
   };
 
+  const grandTotal = series.reduce((a, b) => a + b, 0);
+
   return (
     <div className="animate-fade">
+      <DashboardView 
+        totals={{
+          balance: accounts.reduce((sum, a) => sum + (a.includeInTotal ? (a.currentBalance || 0) : 0), 0),
+          income: transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
+          expenses: transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)
+        }}
+        recentTransactions={transactions}
+        currency={currency}
+        userProfile={userProfile}
+        onEditGoals={onEditGoals}
+      />
+      
       <div style={styles.topNav}>
         <div style={styles.tabs}>
           <button 
@@ -181,7 +179,15 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
 
         <div style={styles.chartContainer}>
           {series.length > 0 ? (
-            <Chart options={chartOptions} series={series} type="donut" height="280" />
+            <div style={{ width: '100%', textAlign: 'center' }}>
+              <Chart options={chartOptions} series={series} type="donut" height="250" />
+              <div style={styles.chartFooter}>
+                <p style={styles.footerLabel}>TOTAL {type === 'income' ? 'INGRESADO' : 'GASTADO'}</p>
+                <h3 style={styles.footerValue}>
+                  {grandTotal.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
+                </h3>
+              </div>
+            </div>
           ) : (
             <div style={styles.noData}>No hay datos en este periodo</div>
           )}
@@ -244,7 +250,29 @@ const styles = {
     display: 'flex', justifyContent: 'center', alignItems: 'center',
     gap: '24px', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-main)'
   },
-  chartContainer: { minHeight: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  chartContainer: { 
+    height: '320px', 
+    display: 'flex', 
+    flexDirection: 'column', 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  chartFooter: {
+    marginTop: '12px',
+    textAlign: 'center'
+  },
+  footerLabel: {
+    fontSize: '0.75rem',
+    color: 'var(--text-muted)',
+    fontWeight: '600',
+    letterSpacing: '0.05em',
+    marginBottom: '4px'
+  },
+  footerValue: {
+    fontSize: '1.6rem',
+    fontWeight: '800',
+    color: 'var(--text-heading)'
+  },
   noData: { color: 'var(--text-muted)', fontSize: '0.9rem' },
   addBtn: {
     position: 'absolute', right: '16px', bottom: '16px', width: '48px', height: '48px',

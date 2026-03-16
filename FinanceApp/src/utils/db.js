@@ -79,6 +79,13 @@ export const db ={
     return list;
   },
   deleteAccount: (id) => {
+    // Also delete transactions associated with this account
+    const txList = db.getTransactions().filter(t => 
+      !((t.type === 'transfer' && (t.fromAccountId === id || t.toAccountId === id)) ||
+        (t.type !== 'transfer' && (t.accountId || 'default') === id))
+    );
+    db.save(DB_KEYS.TRANSACTIONS, txList);
+
     const list = db.getAccounts().filter(a => a.id !== id);
     db.save(DB_KEYS.ACCOUNTS, list);
     return list;
@@ -126,6 +133,16 @@ export const db ={
   saveIncome: (income) => {
     const prefs = db.get(DB_KEYS.USER_PREFS);
     db.save(DB_KEYS.USER_PREFS, { ...prefs, income });
+  },
+
+  // Expected Expenses
+  getExpectedExpenses: () => {
+    const prefs = db.get(DB_KEYS.USER_PREFS);
+    return prefs.expectedExpenses || 0;
+  },
+  saveExpectedExpenses: (expectedExpenses) => {
+    const prefs = db.get(DB_KEYS.USER_PREFS);
+    db.save(DB_KEYS.USER_PREFS, { ...prefs, expectedExpenses });
   },
 
   // Scheduled Payments (for Strategy)
