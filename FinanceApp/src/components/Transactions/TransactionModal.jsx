@@ -39,6 +39,18 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
       if (firstCat) setCategoryId(firstCat.id);
     }
   }, [type, categories, initialData, initialCategoryId, isOpen]);
+ 
+  const formatAmountDisplay = (val) => {
+    if (val === null || val === undefined || val === '') return '';
+    const numericStr = val.toString().replace(/\D/g, '');
+    if (!numericStr) return '';
+    return '$ ' + numericStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  const handleAmountChange = (e) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    setAmount(rawValue);
+  };
 
   if (!isOpen) return null;
 
@@ -101,11 +113,11 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
             <label style={styles.label}>Monto ({currency})</label>
             <input
               autoFocus
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              type="text"
+              inputMode="numeric"
+              placeholder="$ 0"
+              value={formatAmountDisplay(amount)}
+              onChange={handleAmountChange}
               style={styles.input}
               required
             />
@@ -121,7 +133,9 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
                   style={styles.input}
                 >
                   {accounts.map(acc => (
-                    <option key={acc.id} value={acc.id}>{acc.name}</option>
+                    <option key={acc.id} value={acc.id}>
+                      {acc.name} ({acc.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} {currency})
+                    </option>
                   ))}
                 </select>
               </div>
@@ -133,7 +147,9 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
                   style={styles.input}
                 >
                   {accounts.map(acc => (
-                    <option key={acc.id} value={acc.id}>{acc.name}</option>
+                    <option key={acc.id} value={acc.id}>
+                      {acc.name} ({acc.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} {currency})
+                    </option>
                   ))}
                 </select>
               </div>
@@ -148,7 +164,9 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
                   style={styles.input}
                 >
                   {accounts.map(acc => (
-                    <option key={acc.id} value={acc.id}>{acc.name}</option>
+                    <option key={acc.id} value={acc.id}>
+                      {acc.name} ({acc.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} {currency})
+                    </option>
                   ))}
                 </select>
               </div>
