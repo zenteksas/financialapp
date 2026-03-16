@@ -372,7 +372,7 @@ function App() {
         onClose={() => { setIsModalOpen(false); setEditingTransaction(null); }}
         onSave={handleSaveTransaction}
         categories={categories}
-        accounts={accounts}
+        accounts={totals.accountBalances}
         currency={currency}
         onAddCategory={(type) => {
           setDefaultCategoryType(type);
