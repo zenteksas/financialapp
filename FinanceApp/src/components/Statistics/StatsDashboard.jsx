@@ -108,9 +108,9 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
       plotOptions: {
         pie: {
           donut: {
-            size: '80%',
+            size: '75%',
             labels: {
-              show: false, // Moved outside for stability
+              show: false
             }
           }
         }
@@ -118,7 +118,57 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
     });
   };
 
+  const formatCompactNumber = (number) => {
+    if (number >= 1000000) {
+      return (number / 1000000).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + ' M';
+    }
+    if (number >= 1000) {
+      return (number / 1000).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + ' K';
+    }
+    return number.toLocaleString('es-ES');
+  };
+
   const grandTotal = series.reduce((a, b) => a + b, 0);
+
+  useEffect(() => {
+    setChartOptions(prev => ({
+      ...prev,
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '75%',
+            labels: {
+              show: true,
+              name: {
+                show: true,
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'var(--text-muted)',
+                offsetY: -10,
+                formatter: () => 'TOTAL'
+              },
+              value: {
+                show: true,
+                fontSize: '20px',
+                fontWeight: 800,
+                color: 'var(--text-heading)',
+                offsetY: 10,
+                formatter: (val) => `${formatCompactNumber(parseFloat(val))} ${currency}`
+              },
+              total: {
+                show: true,
+                label: 'TOTAL',
+                color: 'var(--text-muted)',
+                fontSize: '12px',
+                fontWeight: 600,
+                formatter: () => `${formatCompactNumber(grandTotal)} ${currency}`
+              }
+            }
+          }
+        }
+      }
+    }));
+  }, [grandTotal, currency]);
 
   return (
     <div className="animate-fade">
@@ -174,14 +224,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
         <div style={styles.chartContainer}>
           {series.length > 0 ? (
             <div style={{ width: '100%', textAlign: 'center' }}>
-              <Chart options={chartOptions} series={series} type="donut" height="250" />
-              <div style={styles.chartFooter}>
-                <p style={styles.footerLabel}>TOTAL {type === 'income' ? 'INGRESADO' : 'GASTADO'}</p>
-                <h3 style={styles.footerValue}>
-                  {grandTotal.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
-                </h3>
-                <p style={{ ...styles.footerLabel, marginTop: '8px' }}>DISTRIBUCIÓN</p>
-              </div>
+              <Chart options={chartOptions} series={series} type="donut" height="280" />
             </div>
           ) : (
             <div style={styles.noData}>No hay datos en este periodo</div>
