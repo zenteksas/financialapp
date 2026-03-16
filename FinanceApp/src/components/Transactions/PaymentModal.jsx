@@ -29,6 +29,18 @@ const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency
     }
   }, [isOpen, initialData]);
 
+  const formatAmountDisplay = (val) => {
+    if (val === null || val === undefined || val === '') return '';
+    const numericStr = val.toString().replace(/\D/g, '');
+    if (!numericStr) return '';
+    return '$ ' + numericStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  const handleAmountChange = (e) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    setFormData(prev => ({ ...prev, amount: rawValue }));
+  };
+
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
@@ -63,10 +75,11 @@ const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency
             <div style={{ flex: 1 }}>
               <label style={styles.label}>Monto ({currency})</label>
               <input
-                type="number"
-                placeholder="0"
-                value={formData.amount}
-                onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                type="text"
+                inputMode="numeric"
+                placeholder="$ 0"
+                value={formatAmountDisplay(formData.amount)}
+                onChange={handleAmountChange}
                 style={styles.input}
                 required
               />
@@ -142,10 +155,17 @@ const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency
 const styles = {
   overlay: {
     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 6000, padding: '20px', backdropFilter: 'blur(8px)',
+    backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+    zIndex: 6000, backdropFilter: 'blur(8px)',
   },
-  modal: { width: '100%', maxWidth: '400px', borderRadius: '28px', padding: '28px' },
+  modal: { 
+    width: '100%', 
+    maxWidth: '600px',
+    borderTopLeftRadius: '32px', 
+    borderTopRightRadius: '32px', 
+    padding: '32px 24px calc(32px + var(--safe-area-bottom))',
+    boxShadow: '0 -10px 40px rgba(0,0,0,0.5)',
+  },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
   closeBtn: { background: 'none', color: 'var(--text-muted)' },
   form: { display: 'flex', flexDirection: 'column', gap: '20px' },
