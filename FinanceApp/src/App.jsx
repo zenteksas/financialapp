@@ -17,68 +17,6 @@ import { Menu, ChevronDown, Bell, User, Edit2, Smile, Heart, Zap, Coffee, Gamepa
 
 const AVATAR_ICONS = { User, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star };
 
-const DashboardView = ({ totals, recentTransactions, currency, userProfile }) => (
-  <div className="animate-fade">
-    <header style={{ marginBottom: '32px' }}>
-      <h1 style={{ fontSize: '2rem', marginBottom: '8px' }}>Hola, {userProfile?.name || 'Usuario'}</h1>
-      <p style={{ color: 'var(--text-muted)' }}>Bienvenido a tu Gestor de Finanzas</p>
-    </header>
-
-    <div className="glass" style={styles.balanceCard}>
-      <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '8px' }}>Saldo Total</p>
-      <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '24px' }}>
-        {totals.balance.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
-      </h2>
-      
-      <div style={styles.summaryRow}>
-        <div 
-          style={{ ...styles.summaryItem, cursor: 'pointer' }}
-          onClick={() => onEditGoals('income')}
-          title="Editar meta de ingresos"
-        >
-          <TrendingUp size={16} color="var(--secondary)" style={{ marginRight: '6px' }} />
-          <div>
-            <p style={styles.summaryLabel}>Ingresos</p>
-            <p style={styles.summaryValue}>+{totals.income.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
-          </div>
-        </div>
-        <div 
-          style={{ ...styles.summaryItem, cursor: 'pointer' }}
-          onClick={() => onEditGoals('expense')}
-          title="Editar meta de gastos"
-        >
-          <TrendingDown size={16} color="var(--danger)" style={{ marginRight: '6px' }} />
-          <div>
-            <p style={styles.summaryLabel}>Gastos</p>
-            <p style={styles.summaryValue}>-{totals.expenses.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div style={{ marginTop: '32px' }}>
-      <h3 style={{ marginBottom: '16px' }}>Actividad Reciente</h3>
-      {recentTransactions.length === 0 ? (
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No hay movimientos aún.</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {recentTransactions.slice(0, 3).map(tx => (
-            <div key={tx.id} className="glass" style={styles.smallItem}>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: '500', fontSize: '0.9rem' }}>{tx.note || 'Transacción'}</p>
-                <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{tx.date}</p>
-              </div>
-              <p style={{ fontWeight: '600', color: tx.type === 'income' ? 'var(--secondary)' : 'var(--danger)', fontSize: '0.9rem' }}>
-                {tx.type === 'income' ? '+' : '-'}{tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  </div>
-);
-
 const styles = {
   topBar: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',

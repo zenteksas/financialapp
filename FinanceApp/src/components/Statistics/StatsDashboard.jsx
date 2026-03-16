@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Chart from 'react-apexcharts';
 import { ChevronLeft, ChevronRight, Utensils, Car, Home, ShoppingBag, Heart, Gamepad, Briefcase, GraduationCap, Plane, Coffee, Tv, Zap, Tag, Plus, Smartphone, PiggyBank, Receipt, ChevronDown } from 'lucide-react';
+import DashboardView from './DashboardView';
 
 const ICONS = { Utensils, Car, Home, ShoppingBag, Heart, Gamepad, Briefcase, GraduationCap, Plane, Coffee, Tv, Zap, Smartphone, PiggyBank, Receipt, Tag };
 
-const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountId, accounts, currency }) => {
+const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountId, accounts, currency, userProfile, onEditGoals }) => {
   const [type, setType] = useState('expense');
   const [period, setPeriod] = useState('semana');
   const [rangeLabel, setRangeLabel] = useState('');
