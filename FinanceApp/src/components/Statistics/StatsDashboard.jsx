@@ -147,7 +147,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
             style={styles.periodBtn(period === p.toLowerCase())}
             onClick={() => {
               setPeriod(p.toLowerCase());
-              if (p === 'Período') setIsPickingRange(true);
+              setIsPickingRange(p === 'Período');
             }}
           >
             {p}
