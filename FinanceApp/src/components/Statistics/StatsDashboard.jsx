@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Chart from 'react-apexcharts';
 import { ChevronLeft, ChevronRight, Utensils, Car, Home, ShoppingBag, Heart, Gamepad, Briefcase, GraduationCap, Plane, Coffee, Tv, Zap, Tag, Plus, Minus, Smartphone, PiggyBank, Receipt, ChevronDown } from 'lucide-react';
-import DashboardView from './DashboardView';
 
 const ICONS = { Utensils, Car, Home, ShoppingBag, Heart, Gamepad, Briefcase, GraduationCap, Plane, Coffee, Tv, Zap, Smartphone, PiggyBank, Receipt, Tag };
 
-const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountId, accounts, currency, userProfile, onEditGoals }) => {
+const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountId, accounts, currency, userProfile, onEditGoals, onEditTransaction }) => {
   const [type, setType] = useState('expense');
   const [period, setPeriod] = useState('semana');
   const [rangeLabel, setRangeLabel] = useState('');
@@ -118,18 +117,6 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
 
   return (
     <div className="animate-fade">
-      <div style={styles.summaryContainer}>
-         <div 
-          style={styles.summaryBox} 
-          onClick={() => onEditGoals(type)}
-        >
-          <p style={styles.summaryLabel}>Total {type === 'income' ? 'Ingresos' : 'Gastos'} ({period})</p>
-          <h2 style={{ ...styles.summaryValue, color: type === 'income' ? 'var(--secondary)' : 'var(--danger)' }}>
-            {grandTotal.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
-          </h2>
-          <p style={styles.editHint}>Toca para editar meta mensual</p>
-        </div>
-      </div>
 
       <div style={styles.topNav}>
         <div style={styles.tabs}>
@@ -198,7 +185,6 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
       </div>
 
       <div style={{ marginTop: '24px' }}>
-        <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)', fontSize: '0.85rem', letterSpacing: '0.05em' }}>DESGLOSE POR CATEGORÍA</h4>
         <div style={styles.categoryList}>
           {categoryBreakdown.map(cat => {
             const Icon = ICONS[cat.icon] || Tag;
@@ -272,18 +258,6 @@ const styles = {
     fontSize: '0.85rem', fontWeight: '400', cursor: 'pointer',
     borderBottom: active ? '2px solid var(--secondary)' : '2px solid transparent'
   }),
-  summaryContainer: { marginBottom: '24px' },
-  summaryBox: { 
-    padding: '24px', 
-    borderRadius: '24px', 
-    backgroundColor: 'rgba(255,255,255,0.03)', 
-    border: '1px solid var(--glass-border)',
-    textAlign: 'center',
-    cursor: 'pointer'
-  },
-  summaryLabel: { fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' },
-  summaryValue: { fontSize: '2.2rem', fontWeight: '800', marginBottom: '4px' },
-  editHint: { fontSize: '0.7rem', color: 'var(--text-muted)', opacity: 0.6 },
   chartCard: {
     padding: '20px', borderRadius: '24px', position: 'relative',
     backgroundColor: '#1e1e1a' // Specific dark brown/green from image
