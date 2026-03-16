@@ -13,6 +13,9 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
   const [series, setSeries] = useState([]);
   const [chartOptions, setChartOptions] = useState({});
   const [categoryBreakdown, setCategoryBreakdown] = useState([]);
+  const [isActivityExpanded, setIsActivityExpanded] = useState(false);
+  const [expandedCategoryId, setExpandedCategoryId] = useState(null);
+  const [currentPeriodFilteredTxs, setCurrentPeriodFilteredTxs] = useState([]);
 
   useEffect(() => {
     processData();
@@ -30,7 +33,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
 
     // Filter by period
     const now = new Date();
-    filteredTxs = filteredTxs.filter(tx => {
+    const periodFiltered = filteredTxs.filter(tx => {
       const txDate = new Date(parseInt(tx.id));
       if (period === 'día') {
         return txDate.toDateString() === now.toDateString();
@@ -63,15 +66,17 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
     else if (period === 'año') setRangeLabel(now.getFullYear().toString());
     else if (period === 'período' && customRange.start) setRangeLabel(`${customRange.start} – ${customRange.end}`);
     else setRangeLabel('Todo el tiempo');
+    
+    setCurrentPeriodFilteredTxs(periodFiltered);
 
     // Filter by type (income/expense)
-    filteredTxs = filteredTxs.filter(t => t.type === type);
+    let typedTxs = periodFiltered.filter(t => t.type === type);
     
     // Group by category
     const totals = {};
     let grandTotal = 0;
 
-    filteredTxs.forEach(tx => {
+    typedTxs.forEach(tx => {
       const catId = tx.categoryId || 'other';
       totals[catId] = (totals[catId] || 0) + tx.amount;
       grandTotal += tx.amount;
@@ -171,7 +176,11 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
             <div style={{ width: '100%', textAlign: 'center' }}>
               <Chart options={chartOptions} series={series} type="donut" height="250" />
               <div style={styles.chartFooter}>
-                <p style={styles.footerLabel}>DISTRIBUCIÓN DE {type === 'income' ? 'INGRESOS' : 'GASTOS'}</p>
+                <p style={styles.footerLabel}>TOTAL {type === 'income' ? 'INGRESADO' : 'GASTADO'}</p>
+                <h3 style={styles.footerValue}>
+                  {grandTotal.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
+                </h3>
+                <p style={{ ...styles.footerLabel, marginTop: '8px' }}>DISTRIBUCIÓN</p>
               </div>
             </div>
           ) : (
@@ -188,51 +197,94 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
         <div style={styles.categoryList}>
           {categoryBreakdown.map(cat => {
             const Icon = ICONS[cat.icon] || Tag;
+            const isExpanded = expandedCategoryId === cat.id;
+            const catTransactions = currentPeriodFilteredTxs.filter(t => t.categoryId === cat.id && t.type === type);
+
             return (
-              <div key={cat.id} style={styles.catItem}>
-                <div style={styles.catIcon(cat.color)}>
-                  <Icon size={20} />
-                </div>
-                <div style={styles.catInfo}>
-                  <span style={styles.catName}>{cat.name}</span>
-                  <div style={styles.catValues}>
-                    <span style={styles.catPercent}>{cat.percentage.toFixed(0)} %</span>
-                    <span style={styles.catAmount}>{cat.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</span>
+              <div key={cat.id} style={{ marginBottom: '8px' }}>
+                <div 
+                  style={{ ...styles.catItem, cursor: 'pointer' }}
+                  onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
+                >
+                  <div style={styles.catIcon(cat.color)}>
+                    <Icon size={20} />
+                  </div>
+                  <div style={styles.catInfo}>
+                    <span style={styles.catName}>{cat.name}</span>
+                    <div style={styles.catValues}>
+                      <span style={styles.catPercent}>{cat.percentage.toFixed(0)} %</span>
+                      <span style={styles.catAmount}>{cat.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</span>
+                    </div>
+                  </div>
+                  <div style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.3s' }}>
+                    <ChevronDown size={14} style={{ color: 'var(--secondary)', opacity: 0.5 }} />
                   </div>
                 </div>
-                <ChevronDown size={14} style={{ color: 'var(--secondary)', opacity: 0.5 }} />
+
+                {isExpanded && (
+                  <div style={{ padding: '8px 8px 8px 48px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {catTransactions.map(tx => (
+                      <div 
+                        key={tx.id} 
+                        className="glass" 
+                        style={{ ...styles.activityItem, padding: '12px', cursor: 'pointer' }}
+                        onClick={(e) => { e.stopPropagation(); onEditTransaction(tx); }}
+                      >
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '0.85rem', fontWeight: '500' }}>{tx.note || 'Sin nota'}</p>
+                          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{tx.date}</p>
+                        </div>
+                        <p style={{ fontWeight: '600', color: type === 'income' ? 'var(--secondary)' : 'var(--danger)', fontSize: '0.85rem' }}>
+                          {tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       </div>
 
-      <div style={{ marginTop: '32px' }}>
-        <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)', fontSize: '0.85rem', letterSpacing: '0.05em' }}>ACTIVIDAD RECIENTE</h4>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {transactions.filter(t => t.type === type).slice(0, 5).map(tx => (
-            <div 
-              key={tx.id} 
-              className="glass" 
-              style={{ ...styles.activityItem, cursor: 'pointer' }}
-              onClick={() => onEditTransaction(tx)}
-            >
-              <div style={styles.activityIcon(type === 'income' ? 'var(--secondary)' : 'var(--danger)')}>
-                {type === 'income' ? <Plus size={16} /> : <Minus size={16} />}
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontWeight: '600', fontSize: '0.9rem' }}>{tx.note || (categories.find(c => c.id === tx.categoryId)?.name) || 'Transacción'}</p>
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{tx.date}</p>
-              </div>
-              <p style={{ fontWeight: '700', color: type === 'income' ? 'var(--secondary)' : 'var(--danger)', fontSize: '0.95rem' }}>
-                {type === 'income' ? '+' : '-'}{tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
-              </p>
-            </div>
-          ))}
-          {transactions.filter(t => t.type === type).length === 0 && (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '20px' }}>No hay actividad para mostrar.</p>
-          )}
+      <div style={{ marginTop: '32px', marginBottom: '40px' }}>
+        <div 
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '8px 0' }}
+          onClick={() => setIsActivityExpanded(!isActivityExpanded)}
+        >
+          <h4 style={{ color: 'var(--text-muted)', fontSize: '0.85rem', letterSpacing: '0.05em' }}>ACTIVIDAD RECIENTE</h4>
+          <div style={{ transform: isActivityExpanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.3s', color: 'var(--text-muted)' }}>
+            <ChevronDown size={18} />
+          </div>
         </div>
+
+        {isActivityExpanded && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+            {currentPeriodFilteredTxs.filter(t => t.type === type).length === 0 ? (
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '20px' }}>No hay actividad para mostrar.</p>
+            ) : (
+              currentPeriodFilteredTxs.filter(t => t.type === type).slice(0, 5).map(tx => (
+                <div 
+                  key={tx.id} 
+                  className="glass" 
+                  style={{ ...styles.activityItem, cursor: 'pointer' }}
+                  onClick={() => onEditTransaction(tx)}
+                >
+                  <div style={styles.activityIcon(type === 'income' ? 'var(--secondary)' : 'var(--danger)')}>
+                    {type === 'income' ? <Plus size={16} /> : <Minus size={16} />}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: '600', fontSize: '0.9rem' }}>{tx.note || (categories.find(c => c.id === tx.categoryId)?.name) || 'Transacción'}</p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{tx.date}</p>
+                  </div>
+                  <p style={{ fontWeight: '700', color: type === 'income' ? 'var(--secondary)' : 'var(--danger)', fontSize: '0.95rem' }}>
+                    {type === 'income' ? '+' : '-'}{tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -259,29 +311,39 @@ const styles = {
     borderBottom: active ? '2px solid var(--secondary)' : '2px solid transparent'
   }),
   chartCard: {
-    padding: '20px', borderRadius: '24px', position: 'relative',
-    backgroundColor: '#1e1e1a' // Specific dark brown/green from image
+    padding: '24px', borderRadius: '28px', position: 'relative',
+    backgroundColor: '#1C1C17', // Consistent dark tone
+    minHeight: '420px',
+    display: 'flex',
+    flexDirection: 'column'
   },
   rangeNav: {
     display: 'flex', justifyContent: 'center', alignItems: 'center',
-    gap: '24px', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-main)'
+    gap: '24px', marginBottom: '16px', fontSize: '0.9rem', color: 'var(--text-main)'
   },
   chartContainer: { 
-    height: '300px', 
+    flex: 1,
     display: 'flex', 
     flexDirection: 'column', 
     alignItems: 'center', 
     justifyContent: 'center' 
   },
   chartFooter: {
-    marginTop: '8px',
+    marginTop: '16px',
     textAlign: 'center'
   },
   footerLabel: {
     fontSize: '0.7rem',
     color: 'var(--text-muted)',
     fontWeight: '600',
-    letterSpacing: '0.1em'
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase'
+  },
+  footerValue: {
+    fontSize: '1.8rem',
+    fontWeight: '800',
+    color: 'var(--text-heading)',
+    margin: '4px 0'
   },
   noData: { color: 'var(--text-muted)', fontSize: '0.9rem' },
   addBtn: {
