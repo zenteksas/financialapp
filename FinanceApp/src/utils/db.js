@@ -274,5 +274,12 @@ export const db ={
       }
       return true; // 'periodo' (all)
     });
+  },
+
+  // Factory Reset
+  reset: () => {
+    Object.values(DB_KEYS).forEach(key => {
+      localStorage.removeItem(key);
+    });
   }
 };

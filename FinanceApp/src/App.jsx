@@ -13,7 +13,7 @@ import RemindersModule from './components/Settings/RemindersModule';
 import OnboardingView from './components/Onboarding/OnboardingView';
 import ProfileModal from './components/Settings/ProfileModal';
 import { db } from './utils/db';
-import { Menu, ChevronDown, Bell, User, Edit2, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star } from 'lucide-react';
+import { Menu, ChevronDown, Bell, User, Edit2, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star, Trash2 } from 'lucide-react';
 
 const AVATAR_ICONS = { User, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star };
 
@@ -276,6 +276,36 @@ function App() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div style={{ marginTop: '32px', textAlign: 'center' }}>
+              <button 
+                className="glass"
+                style={{ 
+                  padding: '16px 32px', 
+                  borderRadius: '16px', 
+                  backgroundColor: 'rgba(239, 68, 68, 0.1)', 
+                  color: 'var(--danger)', 
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  margin: '0 auto'
+                }}
+                onClick={() => {
+                  if (window.confirm('¿Estás seguro de que quieres reiniciar la aplicación? Se borrarán TODOS tus datos permanentemente.')) {
+                    db.reset();
+                    window.location.reload();
+                  }
+                }}
+              >
+                <Trash2 size={20} />
+                Reiniciar Aplicación
+              </button>
+              <p style={{ marginTop: '12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                Esta acción borrará transacciones, cuentas y configuraciones.
+              </p>
             </div>
           </div>
         );
