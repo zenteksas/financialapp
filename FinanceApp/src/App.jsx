@@ -189,7 +189,7 @@ function App() {
           <div className="animate-fade">
              <h2 style={{ marginBottom: '20px' }}>Mis Cuentas</h2>
              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-               {accounts.map(acc => (
+               {totals.accountBalances.map(acc => (
                  <div key={acc.id} className="glass" style={{ padding: '20px', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => handleAccountClick(acc)}>
                     <div>
                       <p style={{ fontWeight: '600' }}>{acc.name}</p>
