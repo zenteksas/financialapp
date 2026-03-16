@@ -3,26 +3,42 @@ import { X, Check, Plus, Tag } from 'lucide-react';
 
 const ICONS = { Tag }; // Fallback for simple display
 
-const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, currency, onAddCategory, initialCategoryId }) => {
-  const [type, setType] = useState('expense');
-  const [amount, setAmount] = useState('');
-  const [accountId, setAccountId] = useState(accounts[0]?.id || 'default');
-  const [fromAccountId, setFromAccountId] = useState(accounts[0]?.id || 'default');
-  const [toAccountId, setToAccountId] = useState(accounts[1]?.id || accounts[0]?.id || 'default');
-  const [categoryId, setCategoryId] = useState(initialCategoryId || categories.filter(c => c.type === type)[0]?.id || '');
-  const [note, setNote] = useState('');
+const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, currency, onAddCategory, initialCategoryId, initialData }) => {
+  const [type, setType] = useState(initialData?.type || 'expense');
+  const [amount, setAmount] = useState(initialData?.amount || '');
+  const [accountId, setAccountId] = useState(initialData?.accountId || accounts[0]?.id || 'default');
+  const [fromAccountId, setFromAccountId] = useState(initialData?.fromAccountId || accounts[0]?.id || 'default');
+  const [toAccountId, setToAccountId] = useState(initialData?.toAccountId || accounts[1]?.id || accounts[0]?.id || 'default');
+  const [categoryId, setCategoryId] = useState(initialData?.categoryId || initialCategoryId || categories.filter(c => c.type === type)[0]?.id || '');
+  const [note, setNote] = useState(initialData?.note || '');
 
   useEffect(() => {
-    if (initialCategoryId) setCategoryId(initialCategoryId);
-  }, [initialCategoryId]);
+    if (isOpen) {
+      if (initialData) {
+        setType(initialData.type);
+        setAmount(initialData.amount);
+        setAccountId(initialData.accountId || accounts[0]?.id || 'default');
+        setFromAccountId(initialData.fromAccountId || accounts[0]?.id || 'default');
+        setToAccountId(initialData.toAccountId || accounts[1]?.id || accounts[0]?.id || 'default');
+        setCategoryId(initialData.categoryId || '');
+        setNote(initialData.note || '');
+      } else {
+        setType('expense');
+        setAmount('');
+        setAccountId(accounts[0]?.id || 'default');
+        setCategoryId(initialCategoryId || categories.filter(c => c.type === 'expense')[0]?.id || '');
+        setNote('');
+      }
+    }
+  }, [isOpen, initialData, initialCategoryId, categories, accounts]);
 
-  // Update default category when type changes
+  // Update default category when type changes (only if not editing)
   useEffect(() => {
-    if (!initialCategoryId) {
+    if (!initialData && !initialCategoryId && isOpen) {
       const firstCat = categories.find(c => c.type === type);
       if (firstCat) setCategoryId(firstCat.id);
     }
-  }, [type, categories]);
+  }, [type, categories, initialData, initialCategoryId, isOpen]);
 
   if (!isOpen) return null;
 
@@ -31,6 +47,7 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
     if (!amount || parseFloat(amount) <= 0) return;
     
     onSave({
+      ...initialData,
       amount: parseFloat(amount),
       type,
       accountId: type === 'transfer' ? null : accountId,
@@ -38,7 +55,7 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
       toAccountId: type === 'transfer' ? toAccountId : null,
       categoryId: type === 'transfer' ? null : categoryId,
       note,
-      date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
+      date: initialData?.date || new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
     });
     
     // Reset and close
@@ -51,7 +68,7 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
     <div style={styles.overlay} className="animate-fade">
       <div className="glass" style={styles.modal}>
         <div style={styles.header}>
-          <h3>Nuevo Movimiento</h3>
+          <h3>{initialData ? 'Editar Movimiento' : 'Nuevo Movimiento'}</h3>
           <button onClick={onClose} style={styles.closeBtn}><X size={20} /></button>
         </div>
 

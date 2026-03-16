@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Chart from 'react-apexcharts';
-import { ChevronLeft, ChevronRight, Utensils, Car, Home, ShoppingBag, Heart, Gamepad, Briefcase, GraduationCap, Plane, Coffee, Tv, Zap, Tag, Plus, Smartphone, PiggyBank, Receipt, ChevronDown } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Utensils, Car, Home, ShoppingBag, Heart, Gamepad, Briefcase, GraduationCap, Plane, Coffee, Tv, Zap, Tag, Plus, Minus, Smartphone, PiggyBank, Receipt, ChevronDown } from 'lucide-react';
 import DashboardView from './DashboardView';
 
 const ICONS = { Utensils, Car, Home, ShoppingBag, Heart, Gamepad, Briefcase, GraduationCap, Plane, Coffee, Tv, Zap, Smartphone, PiggyBank, Receipt, Tag };
@@ -118,18 +118,19 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
 
   return (
     <div className="animate-fade">
-      <DashboardView 
-        totals={{
-          balance: accounts.reduce((sum, a) => sum + (a.includeInTotal ? (a.currentBalance || 0) : 0), 0),
-          income: transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0),
-          expenses: transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0)
-        }}
-        recentTransactions={transactions}
-        currency={currency}
-        userProfile={userProfile}
-        onEditGoals={onEditGoals}
-      />
-      
+      <div style={styles.summaryContainer}>
+         <div 
+          style={styles.summaryBox} 
+          onClick={() => onEditGoals(type)}
+        >
+          <p style={styles.summaryLabel}>Total {type === 'income' ? 'Ingresos' : 'Gastos'} ({period})</p>
+          <h2 style={{ ...styles.summaryValue, color: type === 'income' ? 'var(--secondary)' : 'var(--danger)' }}>
+            {grandTotal.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
+          </h2>
+          <p style={styles.editHint}>Toca para editar meta mensual</p>
+        </div>
+      </div>
+
       <div style={styles.topNav}>
         <div style={styles.tabs}>
           <button 
@@ -183,10 +184,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
             <div style={{ width: '100%', textAlign: 'center' }}>
               <Chart options={chartOptions} series={series} type="donut" height="250" />
               <div style={styles.chartFooter}>
-                <p style={styles.footerLabel}>TOTAL {type === 'income' ? 'INGRESADO' : 'GASTADO'}</p>
-                <h3 style={styles.footerValue}>
-                  {grandTotal.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
-                </h3>
+                <p style={styles.footerLabel}>DISTRIBUCIÓN DE {type === 'income' ? 'INGRESOS' : 'GASTOS'}</p>
               </div>
             </div>
           ) : (
@@ -199,25 +197,56 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
         </button>
       </div>
 
-      <div style={styles.categoryList}>
-        {categoryBreakdown.map(cat => {
-          const Icon = ICONS[cat.icon] || Tag;
-          return (
-            <div key={cat.id} style={styles.catItem}>
-              <div style={styles.catIcon(cat.color)}>
-                <Icon size={20} />
-              </div>
-              <div style={styles.catInfo}>
-                <span style={styles.catName}>{cat.name}</span>
-                <div style={styles.catValues}>
-                  <span style={styles.catPercent}>{cat.percentage.toFixed(0)} %</span>
-                  <span style={styles.catAmount}>{cat.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</span>
+      <div style={{ marginTop: '24px' }}>
+        <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)', fontSize: '0.85rem', letterSpacing: '0.05em' }}>DESGLOSE POR CATEGORÍA</h4>
+        <div style={styles.categoryList}>
+          {categoryBreakdown.map(cat => {
+            const Icon = ICONS[cat.icon] || Tag;
+            return (
+              <div key={cat.id} style={styles.catItem}>
+                <div style={styles.catIcon(cat.color)}>
+                  <Icon size={20} />
                 </div>
+                <div style={styles.catInfo}>
+                  <span style={styles.catName}>{cat.name}</span>
+                  <div style={styles.catValues}>
+                    <span style={styles.catPercent}>{cat.percentage.toFixed(0)} %</span>
+                    <span style={styles.catAmount}>{cat.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</span>
+                  </div>
+                </div>
+                <ChevronDown size={14} style={{ color: 'var(--secondary)', opacity: 0.5 }} />
               </div>
-              <ChevronDown size={14} style={{ color: 'var(--secondary)', opacity: 0.5 }} />
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ marginTop: '32px' }}>
+        <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)', fontSize: '0.85rem', letterSpacing: '0.05em' }}>ACTIVIDAD RECIENTE</h4>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {transactions.filter(t => t.type === type).slice(0, 5).map(tx => (
+            <div 
+              key={tx.id} 
+              className="glass" 
+              style={{ ...styles.activityItem, cursor: 'pointer' }}
+              onClick={() => onEditTransaction(tx)}
+            >
+              <div style={styles.activityIcon(type === 'income' ? 'var(--secondary)' : 'var(--danger)')}>
+                {type === 'income' ? <Plus size={16} /> : <Minus size={16} />}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: '600', fontSize: '0.9rem' }}>{tx.note || (categories.find(c => c.id === tx.categoryId)?.name) || 'Transacción'}</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{tx.date}</p>
+              </div>
+              <p style={{ fontWeight: '700', color: type === 'income' ? 'var(--secondary)' : 'var(--danger)', fontSize: '0.95rem' }}>
+                {type === 'income' ? '+' : '-'}{tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
+              </p>
             </div>
-          );
-        })}
+          ))}
+          {transactions.filter(t => t.type === type).length === 0 && (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '20px' }}>No hay actividad para mostrar.</p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -243,6 +272,18 @@ const styles = {
     fontSize: '0.85rem', fontWeight: '400', cursor: 'pointer',
     borderBottom: active ? '2px solid var(--secondary)' : '2px solid transparent'
   }),
+  summaryContainer: { marginBottom: '24px' },
+  summaryBox: { 
+    padding: '24px', 
+    borderRadius: '24px', 
+    backgroundColor: 'rgba(255,255,255,0.03)', 
+    border: '1px solid var(--glass-border)',
+    textAlign: 'center',
+    cursor: 'pointer'
+  },
+  summaryLabel: { fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' },
+  summaryValue: { fontSize: '2.2rem', fontWeight: '800', marginBottom: '4px' },
+  editHint: { fontSize: '0.7rem', color: 'var(--text-muted)', opacity: 0.6 },
   chartCard: {
     padding: '20px', borderRadius: '24px', position: 'relative',
     backgroundColor: '#1e1e1a' // Specific dark brown/green from image
@@ -252,27 +293,21 @@ const styles = {
     gap: '24px', marginBottom: '8px', fontSize: '0.9rem', color: 'var(--text-main)'
   },
   chartContainer: { 
-    height: '320px', 
+    height: '300px', 
     display: 'flex', 
     flexDirection: 'column', 
     alignItems: 'center', 
     justifyContent: 'center' 
   },
   chartFooter: {
-    marginTop: '12px',
+    marginTop: '8px',
     textAlign: 'center'
   },
   footerLabel: {
-    fontSize: '0.75rem',
+    fontSize: '0.7rem',
     color: 'var(--text-muted)',
     fontWeight: '600',
-    letterSpacing: '0.05em',
-    marginBottom: '4px'
-  },
-  footerValue: {
-    fontSize: '1.6rem',
-    fontWeight: '800',
-    color: 'var(--text-heading)'
+    letterSpacing: '0.1em'
   },
   noData: { color: 'var(--text-muted)', fontSize: '0.9rem' },
   addBtn: {
@@ -281,7 +316,7 @@ const styles = {
     display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000',
     boxShadow: '0 4px 12px rgba(0,0,0,0.3)', cursor: 'pointer'
   },
-  categoryList: { display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' },
+  categoryList: { display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' },
   catItem: {
     display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
     backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '16px'
@@ -296,6 +331,23 @@ const styles = {
   catValues: { display: 'flex', gap: '8px', alignItems: 'center' },
   catPercent: { color: 'var(--text-muted)', fontSize: '0.85rem' },
   catAmount: { color: 'var(--text-heading)', fontWeight: '600', fontSize: '1rem' },
+  activityItem: {
+    padding: '16px',
+    borderRadius: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
+  },
+  activityIcon: (color) => ({
+    width: '32px',
+    height: '32px',
+    borderRadius: '10px',
+    backgroundColor: `${color}20`,
+    color: color,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  }),
   dateInput: {
     background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
     color: 'var(--text-main)', padding: '6px 10px', borderRadius: '8px',

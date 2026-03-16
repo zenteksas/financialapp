@@ -59,6 +59,7 @@ function App() {
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [goalModalType, setGoalModalType] = useState('income'); // 'income' or 'expense'
   const [goalInputValue, setGoalInputValue] = useState(0);
+  const [editingTransaction, setEditingTransaction] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -75,7 +76,11 @@ function App() {
   };
 
   const handleSaveAccount = (data) => {
-    db.addAccount(data);
+    const processedData = {
+      ...data,
+      balance: parseFloat(data.balance) || 0
+    };
+    db.addAccount(processedData);
     loadData();
   };
 
@@ -97,9 +102,15 @@ function App() {
 
   const handleSaveTransaction = (newTx) => {
     db.addTransaction(newTx);
+    setEditingTransaction(null);
     setSelectedCategoryId(null); // Clear after use
     loadData();
-    setActiveTab('dashboard');
+    // No need to switch tab if editing from dashboard
+  };
+
+  const handleEditTransaction = (tx) => {
+    setEditingTransaction(tx);
+    setIsModalOpen(true);
   };
 
   const handleSaveCategory = (data) => {
@@ -152,6 +163,7 @@ function App() {
               setGoalInputValue(type === 'income' ? db.getIncome() : db.getExpectedExpenses());
               setIsGoalModalOpen(true);
             }}
+            onEditTransaction={handleEditTransaction}
           />
         );
       case 'stats': 
@@ -327,7 +339,7 @@ function App() {
       
       <TransactionModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => { setIsModalOpen(false); setEditingTransaction(null); }}
         onSave={handleSaveTransaction}
         categories={categories}
         accounts={accounts}
@@ -337,6 +349,7 @@ function App() {
           setIsCategoryModalOpen(true);
         }}
         initialCategoryId={selectedCategoryId}
+        initialData={editingTransaction}
       />
 
       <AccountModal
