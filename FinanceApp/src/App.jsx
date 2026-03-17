@@ -13,6 +13,8 @@ import RemindersModule from './components/Settings/RemindersModule';
 import OnboardingView from './components/Onboarding/OnboardingView';
 import ProfileModal from './components/Settings/ProfileModal';
 import PaymentModal from './components/Transactions/PaymentModal';
+import BackupRestoreModule from './components/Settings/BackupRestoreModule';
+import ExportModule from './components/Settings/ExportModule';
 import { db } from './utils/db';
 import { Menu, ChevronDown, Bell, User, Edit2, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star, Trash2 } from 'lucide-react';
 
@@ -148,6 +150,9 @@ function App() {
     // Assign unique IDs with offset to avoid Date.now() collisions in fast forEach
     const base = Date.now();
     accountList.forEach((acc, i) => db.addAccount({ ...acc, id: (base + i).toString() }));
+    // Always start at dashboard after onboarding
+    setActiveTab('dashboard');
+    localStorage.setItem('finance_active_tab', 'dashboard');
     loadData();
   };
 
@@ -251,6 +256,10 @@ function App() {
         );
       case 'debts': 
         return <DebtsModule debts={debts} totals={totals} onUpdate={loadData} currency={currency} />;
+      case 'backup':
+        return <BackupRestoreModule />;
+      case 'export':
+        return <ExportModule currency={currency} />;
       case 'settings':
         return (
           <div className="animate-fade">

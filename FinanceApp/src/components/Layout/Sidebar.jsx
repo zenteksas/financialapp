@@ -2,7 +2,8 @@ import React from 'react';
 import { 
   Home, Wallet, PieChart, Tag, Repeat, Bell, Settings, 
   CircleOff, Share2, Star, MessageSquare, RefreshCw, X,
-  User, Smile, Heart, Zap, Coffee, Gamepad, Rocket
+  User, Smile, Heart, Zap, Coffee, Gamepad, Rocket,
+  Download, FileText
 } from 'lucide-react';
 
 const AVATAR_ICONS = { User, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star };
@@ -24,6 +25,8 @@ const Sidebar = ({ isOpen, onClose, userProfile, totalBalance, onNavigate, activ
     { id: 'categories', label: 'Categorías', icon: Tag },
     { id: 'debts', label: 'Deudas', icon: Wallet },
     { id: 'payments', label: 'Pagos habituales', icon: Repeat },
+    { id: 'backup', label: 'Respaldar / Backup', icon: Download },
+    { id: 'export', label: 'Exportar (CSV/PDF)', icon: FileText },
     { id: 'reminders', label: 'Recordatorios', icon: Bell },
     { id: 'settings', label: 'Ajustes', icon: Settings },
   ];

@@ -285,5 +285,34 @@ export const db ={
     Object.values(DB_KEYS).forEach(key => {
       localStorage.removeItem(key);
     });
+  },
+
+  // Backup & Restore
+  exportFullData: () => {
+    const data = {};
+    Object.keys(DB_KEYS).forEach(key => {
+      data[DB_KEYS[key]] = db.get(DB_KEYS[key]);
+    });
+    // Add active tab if exists
+    data['finance_active_tab'] = localStorage.getItem('finance_active_tab') || 'dashboard';
+    return data;
+  },
+
+  importFullData: (data) => {
+    if (!data || typeof data !== 'object') return false;
+    
+    // Validate that it looks like our data (optional but good)
+    const keys = Object.values(DB_KEYS);
+    keys.forEach(key => {
+      if (data[key]) {
+        db.save(key, data[key]);
+      }
+    });
+
+    if (data['finance_active_tab']) {
+      localStorage.setItem('finance_active_tab', data['finance_active_tab']);
+    }
+    
+    return true;
   }
 };
