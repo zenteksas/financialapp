@@ -18,9 +18,6 @@ const INITIAL_CATEGORIES = [
   { id: '5', name: 'Salario', icon: 'Wallet', color: '#10b981', type: 'income' }
 ];
 
-const INITIAL_ACCOUNTS = [
-  { id: 'default', name: 'Efectivo', balance: 0, color: '#10b981', icon: 'Wallet', includeInTotal: true }
-];
 
 export const db ={
   // General Storage access
@@ -74,10 +71,6 @@ export const db ={
   // Accounts
   getAccounts: () => {
     const accs = db.get(DB_KEYS.ACCOUNTS);
-    if (accs.length === 0) {
-      db.save(DB_KEYS.ACCOUNTS, INITIAL_ACCOUNTS);
-      return INITIAL_ACCOUNTS;
-    }
     return accs;
   },
   addAccount: (account) => {

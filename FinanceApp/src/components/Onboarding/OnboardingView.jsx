@@ -96,7 +96,7 @@ const OnboardingView = ({ onComplete }) => {
         onboardingComplete: true
       },
       currency: data.currency,
-      accounts: initialAccounts.length > 0 ? initialAccounts : [{ name: 'Efectivo', balance: 0, icon: 'Wallet', color: '#10b981', includeInTotal: true }]
+      accounts: initialAccounts
     });
   };
 
