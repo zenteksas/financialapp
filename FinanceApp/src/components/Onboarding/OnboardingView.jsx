@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { 
-  ChevronRight, ChevronLeft, Check, Wallet, 
+  ChevronRight, ChevronLeft, Check, Wallet, Plus, Trash2,
   User, Smile, Star, Heart, Zap, Coffee, 
-  Gamepad, Rocket, Globe, Landmark, Coins
+  Gamepad, Rocket
 } from 'lucide-react';
 
 const AVATARS = [
@@ -22,20 +22,69 @@ const CURRENCIES = [
   { code: 'EUR', name: 'Euro', symbol: '€' }
 ];
 
+const ACCOUNT_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+
+// Format number with dot thousands separator
+const formatWithDots = (val) => {
+  if (val === '' || val === null || val === undefined) return '';
+  const numericStr = val.toString().replace(/\D/g, '');
+  if (!numericStr) return '';
+  return numericStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const parseFormatted = (val) => {
+  return parseFloat(val.toString().replace(/\./g, '')) || 0;
+};
+
 const OnboardingView = ({ onComplete }) => {
   const [step, setStep] = useState(1);
   const [data, setData] = useState({
     name: '',
     currency: 'COP',
-    accountName: 'Efectivo',
-    accountBalance: '',
     avatar: 'User'
   });
+
+  // Multiple accounts support
+  const [accounts, setAccounts] = useState([
+    { name: '', balanceRaw: '', colorIndex: 0 }
+  ]);
 
   const nextStep = () => setStep(s => s + 1);
   const prevStep = () => setStep(s => s - 1);
 
+  // --- Account handlers ---
+  const updateAccount = (index, field, value) => {
+    setAccounts(prev => prev.map((acc, i) => i === index ? { ...acc, [field]: value } : acc));
+  };
+
+  const handleBalanceChange = (index, e) => {
+    const raw = e.target.value.replace(/\D/g, '');
+    updateAccount(index, 'balanceRaw', raw);
+  };
+
+  const addAccount = () => {
+    setAccounts(prev => [
+      ...prev,
+      { name: '', balanceRaw: '', colorIndex: prev.length % ACCOUNT_COLORS.length }
+    ]);
+  };
+
+  const removeAccount = (index) => {
+    if (accounts.length <= 1) return;
+    setAccounts(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleFinish = () => {
+    const initialAccounts = accounts
+      .filter(a => a.name.trim())
+      .map((a, i) => ({
+        name: a.name.trim(),
+        balance: parseFormatted(a.balanceRaw),
+        icon: 'Wallet',
+        color: ACCOUNT_COLORS[a.colorIndex % ACCOUNT_COLORS.length],
+        includeInTotal: true
+      }));
+
     onComplete({
       profile: {
         name: data.name,
@@ -43,28 +92,24 @@ const OnboardingView = ({ onComplete }) => {
         onboardingComplete: true
       },
       currency: data.currency,
-      initialAccount: {
-        name: data.accountName,
-        balance: parseFloat(data.accountBalance) || 0,
-        icon: 'Wallet',
-        color: '#10b981',
-        includeInTotal: true
-      }
+      accounts: initialAccounts.length > 0 ? initialAccounts : [{ name: 'Efectivo', balance: 0, icon: 'Wallet', color: '#10b981', includeInTotal: true }]
     });
   };
 
   const isNextDisabled = () => {
     if (step === 1 && !data.name.trim()) return true;
-    if (step === 3 && !data.accountName.trim()) return true;
+    if (step === 2 && !accounts[0].name.trim()) return true; // first account name required
     return false;
   };
+
+  const totalSteps = 3;
 
   return (
     <div style={styles.container} className="animate-fade">
       <div className="glass" style={styles.card}>
         {/* Progress Bar */}
         <div style={styles.progressContainer}>
-          <div style={styles.progressBar(step)} />
+          <div style={styles.progressBar(step, totalSteps)} />
         </div>
 
         {step === 1 && (
@@ -110,31 +155,55 @@ const OnboardingView = ({ onComplete }) => {
             <div style={styles.iconCircle}>
               <Wallet size={32} color="var(--secondary)" />
             </div>
-            <h1 style={styles.title}>Tu Primera Cuenta</h1>
-            <p style={styles.subtitle}>Agreguemos el saldo con el que empiezas hoy.</p>
-            
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Nombre de la Cuenta</label>
-              <input 
-                type="text" 
-                placeholder="Ej: Efectivo, Nequi, Banco"
-                value={data.accountName}
-                onChange={e => setData({...data, accountName: e.target.value})}
-                style={styles.input}
-              />
+            <h1 style={styles.title}>Mis Cuentas</h1>
+            <p style={styles.subtitle}>
+              Agrega tus cuentas y el saldo con el que empiezas hoy.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {accounts.map((acc, index) => (
+                <div key={index} className="glass" style={styles.accountCard}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                    <div style={{ ...styles.colorDot, backgroundColor: ACCOUNT_COLORS[acc.colorIndex % ACCOUNT_COLORS.length] }} />
+                    <span style={{ fontWeight: '600', fontSize: '0.85rem', color: 'var(--text-muted)', flex: 1 }}>
+                      {index === 0 ? 'Cuenta Principal ✱' : `Cuenta ${index + 1}`}
+                    </span>
+                    {index > 0 && (
+                      <button onClick={() => removeAccount(index)} style={styles.removeBtn}>
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div style={{ marginBottom: '10px' }}>
+                    <input
+                      type="text"
+                      placeholder={index === 0 ? 'Ej: Efectivo, Nequi, Bancolombia...' : 'Nombre de la cuenta'}
+                      value={acc.name}
+                      onChange={e => updateAccount(index, 'name', e.target.value)}
+                      style={styles.input}
+                      autoFocus={index === 0}
+                    />
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder={`Saldo inicial (${data.currency})`}
+                      value={formatWithDots(acc.balanceRaw)}
+                      onChange={e => handleBalanceChange(index, e)}
+                      style={styles.input}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Saldo Actual ({data.currency})</label>
-              <input 
-                type="number" 
-                placeholder="0.00"
-                value={data.accountBalance}
-                onChange={e => setData({...data, accountBalance: e.target.value})}
-                style={styles.input}
-                autoFocus
-              />
-            </div>
+            <button onClick={addAccount} style={styles.addAccountBtn}>
+              <Plus size={18} style={{ marginRight: '6px' }} />
+              Añadir otra cuenta
+            </button>
           </div>
         )}
 
@@ -180,7 +249,7 @@ const OnboardingView = ({ onComplete }) => {
             </button>
           )}
           <div style={{ flex: 1 }} />
-          {step < 3 ? (
+          {step < totalSteps ? (
             <button 
               onClick={nextStep} 
               disabled={isNextDisabled()}
@@ -226,9 +295,9 @@ const styles = {
     height: '6px',
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  progressBar: (step) => ({
+  progressBar: (step, total) => ({
     height: '100%',
-    width: `${(step / 3) * 100}%`,
+    width: `${(step / total) * 100}%`,
     backgroundColor: 'var(--primary)',
     transition: 'width 0.3s ease',
   }),
@@ -240,12 +309,32 @@ const styles = {
     border: '1px solid var(--glass-border)',
   },
   title: { fontSize: '1.8rem', fontWeight: '800', textAlign: 'center', marginBottom: '8px' },
-  subtitle: { fontSize: '0.95rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '32px' },
+  subtitle: { fontSize: '0.95rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '28px' },
   inputGroup: { marginBottom: '24px' },
   label: { display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '10px', marginLeft: '4px' },
   input: {
-    width: '100%', padding: '16px', borderRadius: '18px', backgroundColor: 'rgba(255,255,255,0.05)',
-    border: '1px solid var(--glass-border)', color: 'white', fontSize: '1.1rem', outline: 'none',
+    width: '100%', padding: '14px 16px', borderRadius: '16px', backgroundColor: 'rgba(255,255,255,0.05)',
+    border: '1px solid var(--glass-border)', color: 'white', fontSize: '1rem', outline: 'none',
+    boxSizing: 'border-box',
+  },
+  accountCard: {
+    padding: '16px',
+    borderRadius: '20px',
+    border: '1px solid var(--glass-border)',
+  },
+  colorDot: {
+    width: '12px', height: '12px', borderRadius: '50%',
+  },
+  removeBtn: {
+    background: 'none', color: 'var(--danger)', padding: '4px', cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+  },
+  addAccountBtn: {
+    width: '100%', padding: '14px', marginTop: '16px',
+    borderRadius: '16px', border: '1px dashed var(--primary)',
+    color: 'var(--primary)', background: 'rgba(74,222,128,0.05)',
+    fontWeight: '600', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer',
   },
   currencyGrid: { display: 'flex', gap: '12px' },
   currencyBtn: (active) => ({
@@ -267,7 +356,7 @@ const styles = {
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     transition: 'all 0.2s', cursor: 'pointer',
   }),
-  footer: { display: 'flex', alignItems: 'center', marginTop: '40px', minHeight: '56px' },
+  footer: { display: 'flex', alignItems: 'center', marginTop: '32px', minHeight: '56px' },
   nextBtn: {
     padding: '12px 24px', borderRadius: '16px', backgroundColor: 'var(--primary)',
     color: 'white', fontWeight: '700', border: 'none', display: 'flex', alignItems: 'center', gap: '8px',

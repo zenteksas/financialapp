@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Plus, Heart } from 'lucide-react';
 import DebtModal from './DebtModal';
 import StrategyView from './StrategyView';
-import SimulatorView from './SimulatorView';
 import { db } from '../../utils/db';
 
 const DebtsModule = ({ debts, totals, onUpdate, currency }) => {
@@ -71,12 +70,6 @@ const DebtsModule = ({ debts, totals, onUpdate, currency }) => {
         >
           Estrategia
         </button>
-        <button 
-          onClick={() => setActiveSubTab('sim')}
-          style={styles.tab(activeSubTab === 'sim')}
-        >
-          Simulador
-        </button>
       </div>
 
       <main style={{ marginTop: '24px' }}>
@@ -134,10 +127,6 @@ const DebtsModule = ({ debts, totals, onUpdate, currency }) => {
 
         {activeSubTab === 'strategy' && (
           <StrategyView debts={debts} currency={currency} />
-        )}
-
-        {activeSubTab === 'sim' && (
-          <SimulatorView debts={debts} currency={currency} />
         )}
       </main>
 

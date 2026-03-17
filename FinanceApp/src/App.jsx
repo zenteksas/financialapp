@@ -36,7 +36,7 @@ const styles = {
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem('finance_active_tab') || 'dashboard');
   const [transactions, setTransactions] = useState([]);
   const [debts, setDebts] = useState([]);
   const [accounts, setAccounts] = useState([]);
@@ -140,11 +140,18 @@ function App() {
     loadData();
   };
 
-  const handleOnboardingComplete = ({ profile, currency, initialAccount }) => {
+  const handleOnboardingComplete = ({ profile, currency, accounts, initialAccount }) => {
     db.saveProfile(profile);
     db.saveCurrency(currency);
-    db.addAccount(initialAccount);
+    // Support both multiple accounts (new) and single account (legacy)
+    const accountList = accounts || (initialAccount ? [initialAccount] : []);
+    accountList.forEach(acc => db.addAccount(acc));
     loadData();
+  };
+
+  const handleSetActiveTab = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem('finance_active_tab', tab);
   };
 
   const handleSavePayment = (data) => {
@@ -359,7 +366,7 @@ function App() {
         onClose={() => setIsSidebarOpen(false)}
         userProfile={userProfile}
         totalBalance={totals.balance}
-        onNavigate={setActiveTab}
+        onNavigate={handleSetActiveTab}
         activeTab={activeTab}
         currency={currency}
       />
@@ -442,8 +449,11 @@ function App() {
       />
       {/* Account Selector Modal */}
       {isAccountSelectorOpen && (
-        <div className="modal-overlay" onClick={() => setIsAccountSelectorOpen(false)}>
-          <div className="glass modal-content animate-slide-up" onClick={e => e.stopPropagation()} style={{ padding: '24px', borderRadius: '32px 32px 0 0', position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: '600px', margin: '0 auto' }}>
+        <div
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1500, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setIsAccountSelectorOpen(false)}
+        >
+          <div className="glass animate-slide-up" onClick={e => e.stopPropagation()} style={{ padding: '24px', borderRadius: '32px 32px 0 0', position: 'fixed', bottom: 0, left: 0, right: 0, maxWidth: '600px', margin: '0 auto' }}>
             <h3 style={{ marginBottom: '20px', textAlign: 'center' }}>Seleccionar Cuenta</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <button 
