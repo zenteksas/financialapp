@@ -51,8 +51,8 @@ const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency
   };
 
   return (
-    <div style={styles.overlay} className="animate-fade">
-      <div className="glass" style={styles.modal}>
+    <div style={styles.overlay} className="animate-fade" onClick={onClose}>
+      <div className="glass" style={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div style={styles.header}>
           <h3>{formData.id ? 'Editar Pago' : 'Nuevo Pago Habitual'}</h3>
           <button onClick={onClose} style={styles.closeBtn}><X size={20} /></button>
@@ -154,17 +154,23 @@ const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency
 
 const styles = {
   overlay: {
-    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-    zIndex: 6000, backdropFilter: 'blur(8px)',
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    display: 'flex',
+    alignItems: 'flex-end',
+    zIndex: 6000,
+    backdropFilter: 'blur(8px)',
   },
-  modal: { 
-    width: '100%', 
-    maxWidth: '600px',
+  modal: {
+    width: '100%',
     maxHeight: '90vh',
     overflowY: 'auto',
-    borderTopLeftRadius: '32px', 
-    borderTopRightRadius: '32px', 
+    borderTopLeftRadius: '32px',
+    borderTopRightRadius: '32px',
     padding: '32px 24px calc(32px + var(--safe-area-bottom))',
     boxShadow: '0 -10px 40px rgba(0,0,0,0.5)',
   },
