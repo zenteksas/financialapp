@@ -1,29 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { CreditCard, Zap, Tv, Home, Shield, Plus, MoreVertical, ShoppingBag, Heart } from 'lucide-react';
-import { db } from '../../utils/db';
-import PaymentModal from './PaymentModal';
 
 const ICONS = { Tv, Zap, Shield, Home, ShoppingBag, Heart };
 
-const PaymentsModule = ({ currency }) => {
-  const [payments, setPayments] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState(null);
-
-  useEffect(() => {
-    setPayments(db.getPayments());
-  }, []);
-
-  const handleSave = (data) => {
-    const updated = db.addPayment(data);
-    setPayments(updated);
-  };
-
-  const handleDelete = (id) => {
-    const updated = db.deletePayment(id);
-    setPayments(updated);
-  };
-
+const PaymentsModule = ({ currency, payments, onEditPayment, onAddPayment }) => {
   const totalMonthly = payments.reduce((sum, p) => sum + p.amount, 0);
 
   return (
@@ -37,7 +17,7 @@ const PaymentsModule = ({ currency }) => {
         {payments.map(payment => {
           const Icon = ICONS[payment.icon] || CreditCard;
           return (
-            <div key={payment.id} className="glass" style={styles.card} onClick={() => { setEditingPayment(payment); setIsModalOpen(true); }}>
+            <div key={payment.id} className="glass" style={styles.card} onClick={() => onEditPayment(payment)}>
               <div style={styles.iconCircle(payment.color)}>
                 <Icon size={20} />
               </div>
@@ -53,7 +33,7 @@ const PaymentsModule = ({ currency }) => {
           );
         })}
         
-        <button className="glass" style={styles.addBtn} onClick={() => { setEditingPayment(null); setIsModalOpen(true); }}>
+        <button className="glass" style={styles.addBtn} onClick={onAddPayment}>
           <Plus size={20} style={{ marginRight: '8px' }} />
           Programar Nuevo Pago
         </button>
@@ -63,15 +43,6 @@ const PaymentsModule = ({ currency }) => {
         <p style={styles.totalLabel}>Total Mensual Habitual</p>
         <h2 style={styles.totalValue}>{totalMonthly.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</h2>
       </div>
-
-      <PaymentModal 
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
-        onDelete={handleDelete}
-        initialData={editingPayment}
-        currency={currency}
-      />
     </div>
   );
 };

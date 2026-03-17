@@ -42,12 +42,14 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [userProfile, setUserProfile] = useState(db.getProfile());
   const [currency, setCurrency] = useState(db.getCurrency());
+  const [payments, setPayments] = useState([]);
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   
   const [editingAccount, setEditingAccount] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -60,6 +62,7 @@ function App() {
   const [goalModalType, setGoalModalType] = useState('income'); // 'income' or 'expense'
   const [goalInputValue, setGoalInputValue] = useState(0);
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [editingPayment, setEditingPayment] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -73,6 +76,7 @@ function App() {
     setUserProfile(db.getProfile());
     setCurrency(db.getCurrency());
     setTotals(db.getTotals());
+    setPayments(db.getPayments());
   };
 
   const handleSaveAccount = (data) => {
@@ -142,6 +146,18 @@ function App() {
     loadData();
   };
 
+  const handleSavePayment = (data) => {
+    db.addPayment(data);
+    loadData();
+    setIsPaymentModalOpen(false);
+  };
+
+  const handleDeletePayment = (id) => {
+    db.deletePayment(id);
+    loadData();
+    setIsPaymentModalOpen(false);
+  };
+
   if (!userProfile.onboardingComplete) {
     return <OnboardingView onComplete={handleOnboardingComplete} />;
   }
@@ -169,7 +185,14 @@ function App() {
       case 'stats': 
         return <PerformanceStats transactions={transactions} currency={currency} />;
       case 'payments':
-        return <PaymentsModule currency={currency} />;
+        return (
+          <PaymentsModule 
+            currency={currency} 
+            payments={payments}
+            onEditPayment={(p) => { setEditingPayment(p); setIsPaymentModalOpen(true); }}
+            onAddPayment={() => { setEditingPayment(null); setIsPaymentModalOpen(true); }}
+          />
+        );
       case 'reminders':
         return <RemindersModule currency={currency} />;
       case 'transactions': 
@@ -380,6 +403,15 @@ function App() {
         }}
         initialCategoryId={selectedCategoryId}
         initialData={editingTransaction}
+      />
+
+      <PaymentModal 
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onSave={handleSavePayment}
+        onDelete={handleDeletePayment}
+        initialData={editingPayment}
+        currency={currency}
       />
 
       <AccountModal
