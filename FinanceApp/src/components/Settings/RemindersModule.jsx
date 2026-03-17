@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, Calendar, Clock, AlertTriangle, CheckCircle2, Trash2, Plus, X } from 'lucide-react';
+import { Bell, Calendar, Clock, AlertTriangle, CheckCircle2, Trash2, Plus, X, Volume2 } from 'lucide-react';
 import { db } from '../../utils/db';
 
 const REMINDER_COLORS = [
@@ -75,6 +75,17 @@ const RemindersModule = () => {
         >
           <Plus size={20} />
           Nuevo
+        </button>
+        <button 
+          onClick={() => window.playFinanceAlert && window.playFinanceAlert()}
+          style={{
+            padding: '12px', borderRadius: '14px', backgroundColor: 'rgba(255,255,255,0.05)',
+            color: 'var(--text-main)', border: '1px solid var(--glass-border)', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s'
+          }}
+          title="Probar sonido de alerta"
+        >
+          <Volume2 size={20} />
         </button>
       </header>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Layout/Sidebar';
 import TransactionList from './components/Transactions/TransactionList';
 import TransactionModal from './components/Transactions/TransactionModal';
@@ -39,6 +39,35 @@ const styles = {
 
 function App() {
   const [activeTab, setActiveTab] = useState(() => localStorage.getItem('finance_active_tab') || 'dashboard');
+  const prevNotificationsRef = useRef([]);
+
+  const playAlertSound = () => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const context = new AudioContext();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, context.currentTime); // Pitch agudo
+      
+      gain.gain.setValueAtTime(0, context.currentTime);
+      gain.gain.linearRampToValueAtTime(0.1, context.currentTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.15);
+      
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.15);
+    } catch (e) {
+      console.warn('Audio alert failed:', e);
+    }
+  };
+
+  // Expose sound to window for other modules to test
+  window.playFinanceAlert = playAlertSound;
   const [transactions, setTransactions] = useState([]);
   const [debts, setDebts] = useState([]);
   const [accounts, setAccounts] = useState([]);
@@ -86,7 +115,18 @@ function App() {
     setCurrency(db.getCurrency());
     setTotals(db.getTotals());
     setPayments(db.getPayments());
-    setNotifications(db.getActiveNotifications());
+    const newNotes = db.getActiveNotifications();
+    setNotifications(newNotes);
+    
+    // Check if we have NEW notifications that weren't there before
+    const prevIds = prevNotificationsRef.current.map(n => n.id);
+    const hasNewNotification = newNotes.some(n => !prevIds.includes(n.id));
+    
+    if (hasNewNotification) {
+      playAlertSound();
+    }
+    
+    prevNotificationsRef.current = newNotes;
   };
 
   const handleSaveAccount = (data) => {
