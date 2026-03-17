@@ -145,7 +145,9 @@ function App() {
     db.saveCurrency(currency);
     // Support both multiple accounts (new) and single account (legacy)
     const accountList = accounts || (initialAccount ? [initialAccount] : []);
-    accountList.forEach(acc => db.addAccount(acc));
+    // Assign unique IDs with offset to avoid Date.now() collisions in fast forEach
+    const base = Date.now();
+    accountList.forEach((acc, i) => db.addAccount({ ...acc, id: (base + i).toString() }));
     loadData();
   };
 
