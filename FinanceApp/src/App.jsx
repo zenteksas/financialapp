@@ -12,6 +12,7 @@ import PaymentsModule from './components/Transactions/PaymentsModule';
 import RemindersModule from './components/Settings/RemindersModule';
 import OnboardingView from './components/Onboarding/OnboardingView';
 import ProfileModal from './components/Settings/ProfileModal';
+import PaymentModal from './components/Transactions/PaymentModal';
 import { db } from './utils/db';
 import { Menu, ChevronDown, Bell, User, Edit2, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star, Trash2 } from 'lucide-react';
 
