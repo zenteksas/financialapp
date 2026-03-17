@@ -129,6 +129,73 @@ export const db ={
     return list;
   },
 
+  // Reminders
+  getReminders: () => db.get(DB_KEYS.REMINDERS),
+  addReminder: (reminder) => {
+    const list = db.getReminders();
+    const newRem = { ...reminder, id: reminder.id || Date.now().toString(), completed: false };
+    const idx = list.findIndex(r => r.id === newRem.id);
+    if (idx !== -1) list[idx] = newRem;
+    else list.push(newRem);
+    db.save(DB_KEYS.REMINDERS, list);
+    return list;
+  },
+  deleteReminder: (id) => {
+    const list = db.getReminders().filter(r => r.id !== id);
+    db.save(DB_KEYS.REMINDERS, list);
+    return list;
+  },
+  toggleReminderComplete: (id) => {
+    const list = db.getReminders();
+    const idx = list.findIndex(r => r.id === id);
+    if (idx !== -1) {
+      list[idx].completed = !list[idx].completed;
+      db.save(DB_KEYS.REMINDERS, list);
+    }
+    return list;
+  },
+
+  // Notifications Logic
+  getActiveNotifications: () => {
+    const now = new Date();
+    const todayDay = now.getDate();
+    const todayStr = now.toISOString().split('T')[0];
+    
+    const notifications = [];
+
+    // 1. Check habitual payments for TODAY
+    const payments = db.getPayments();
+    payments.forEach(p => {
+      if (parseInt(p.date) === todayDay) {
+        notifications.push({
+          id: `pay-${p.id}`,
+          type: 'payment',
+          title: `Pago hoy: ${p.name}`,
+          message: `Recuerda realizar el pago de ${p.amount.toLocaleString()} ${db.getCurrency()}.`,
+          color: p.color || 'var(--primary)',
+          data: p
+        });
+      }
+    });
+
+    // 2. Check personal reminders
+    const reminders = db.getReminders();
+    reminders.forEach(r => {
+      if (!r.completed && r.date <= todayStr) {
+        notifications.push({
+          id: `rem-${r.id}`,
+          type: 'reminder',
+          title: r.title,
+          message: `Programado para: ${r.date} ${r.time || ''}`,
+          color: r.color || 'var(--secondary)',
+          data: r
+        });
+      }
+    });
+
+    return notifications;
+  },
+
   // User Prefs / Income
   getIncome: () => {
     const prefs = db.get(DB_KEYS.USER_PREFS);

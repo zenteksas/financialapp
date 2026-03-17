@@ -46,6 +46,8 @@ function App() {
   const [userProfile, setUserProfile] = useState(db.getProfile());
   const [currency, setCurrency] = useState(db.getCurrency());
   const [payments, setPayments] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,6 +71,10 @@ function App() {
 
   useEffect(() => {
     loadData();
+    // Listen for cross-component data updates
+    const handleUpdate = () => loadData();
+    window.addEventListener('dataUpdated', handleUpdate);
+    return () => window.removeEventListener('dataUpdated', handleUpdate);
   }, []);
 
   const loadData = () => {
@@ -80,6 +86,7 @@ function App() {
     setCurrency(db.getCurrency());
     setTotals(db.getTotals());
     setPayments(db.getPayments());
+    setNotifications(db.getActiveNotifications());
   };
 
   const handleSaveAccount = (data) => {
@@ -400,9 +407,82 @@ function App() {
             } {currency}
           </span>
         </button>
-        <button style={styles.menuBtn}>
-          <Bell size={24} />
+        <button 
+          style={{ ...styles.menuBtn, color: notifications.length > 0 ? '#ffffff' : 'var(--text-heading)' }} 
+          onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+        >
+          <div style={{ position: 'relative' }}>
+            <Bell size={24} fill={notifications.length > 0 ? '#ffffff' : 'none'} />
+            {notifications.length > 0 && (
+              <span style={{
+                position: 'absolute', top: -4, right: -4, width: '10px', height: '10px',
+                borderRadius: '50%', backgroundColor: 'var(--danger)', border: '2px solid var(--bg-color)'
+              }} />
+            )}
+          </div>
         </button>
+
+        {/* --- Notification Tray --- */}
+        {isNotificationsOpen && (
+          <>
+            <div 
+              style={{ position: 'fixed', inset: 0, zIndex: 1001 }} 
+              onClick={() => setIsNotificationsOpen(false)} 
+            />
+            <div className="glass animate-fade-in" style={{
+              position: 'absolute', top: '70px', right: '20px', width: '320px',
+              maxHeight: '440px', borderRadius: '24px', zIndex: 1002, overflow: 'hidden',
+              display: 'flex', flexDirection: 'column', border: '1px solid var(--glass-border)',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
+            }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '700' }}>Notificaciones</h3>
+                <span style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '10px', backgroundColor: 'rgba(255,255,255,0.1)', color: 'var(--text-muted)' }}>
+                  {notifications.length} {notifications.length === 1 ? 'pendiente' : 'pendientes'}
+                </span>
+              </div>
+              
+              <div style={{ overflowY: 'auto', flex: 1, padding: '10px' }}>
+                {notifications.length === 0 ? (
+                  <div style={{ padding: '32px 20px', textAlign: 'center', opacity: 0.6 }}>
+                    <Bell size={32} style={{ marginBottom: '12px', opacity: 0.3 }} />
+                    <p style={{ fontSize: '0.85rem' }}>No tienes alertas activas para hoy.</p>
+                  </div>
+                ) : (
+                  notifications.map(note => (
+                    <div key={note.id} style={{
+                      padding: '12px', borderRadius: '16px', marginBottom: '8px', 
+                      backgroundColor: 'rgba(255,255,255,0.03)', borderLeft: `4px solid ${note.color}`,
+                      cursor: 'pointer'
+                    }} onClick={() => {
+                        if (note.type === 'reminder') {
+                          handleSetActiveTab('reminders');
+                          setIsNotificationsOpen(false);
+                        } else if (note.type === 'payment') {
+                          handleSetActiveTab('payments');
+                          setIsNotificationsOpen(false);
+                        }
+                    }}>
+                      <p style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '2px' }}>{note.title}</p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>{note.message}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              <button 
+                onClick={() => { handleSetActiveTab('reminders'); setIsNotificationsOpen(false); }}
+                style={{
+                  padding: '14px', border: 'none', background: 'rgba(255,255,255,0.05)',
+                  color: 'var(--primary)', fontWeight: '600', fontSize: '0.8rem', cursor: 'pointer',
+                  borderTop: '1px solid var(--glass-border)'
+                }}
+              >
+                Ver todos los recordatorios
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       <div style={styles.pageContainer}>
