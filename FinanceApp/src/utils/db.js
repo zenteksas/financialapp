@@ -159,7 +159,15 @@ export const db ={
   getActiveNotifications: () => {
     const now = new Date();
     const todayDay = now.getDate();
-    const todayStr = now.toISOString().split('T')[0];
+    
+    // Get local date YYYY-MM-DD
+    const y = now.getFullYear();
+    const m = (now.getMonth() + 1).toString().padStart(2, '0');
+    const d = now.getDate().toString().padStart(2, '0');
+    const todayLocalStr = `${y}-${m}-${d}`;
+    
+    // Get local time HH:mm
+    const currentLocalTime = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
     
     const notifications = [];
 
@@ -178,10 +186,14 @@ export const db ={
       }
     });
 
-    // 2. Check personal reminders
+    // 2. Check personal reminders (only if date passed OR today and time passed)
     const reminders = db.getReminders();
     reminders.forEach(r => {
-      if (!r.completed && r.date <= todayStr) {
+      const isPastDate = r.date < todayLocalStr;
+      const isToday = r.date === todayLocalStr;
+      const isPastTime = r.time ? r.time <= currentLocalTime : true;
+
+      if (!r.completed && (isPastDate || (isToday && isPastTime))) {
         notifications.push({
           id: `rem-${r.id}`,
           type: 'reminder',
