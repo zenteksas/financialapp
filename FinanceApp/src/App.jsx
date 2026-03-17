@@ -349,11 +349,11 @@ function App() {
           onClick={() => setIsAccountSelectorOpen(true)}
         >
           <span style={styles.totalLabel}>
-            {selectedAccountId ? accounts.find(a => a.id === selectedAccountId)?.name : 'Total'} <ChevronDown size={14} />
+            {selectedAccountId ? totals.accountBalances.find(a => a.id === selectedAccountId)?.name : 'Total'} <ChevronDown size={14} />
           </span>
           <span style={styles.totalAmount}>
             {selectedAccountId 
-              ? accounts.find(a => a.id === selectedAccountId)?.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) 
+              ? totals.accountBalances.find(a => a.id === selectedAccountId)?.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) 
               : totals.balance.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
             } {currency}
           </span>
@@ -420,7 +420,7 @@ function App() {
               >
                 Todas las cuentas
               </button>
-              {accounts.map(acc => (
+              {totals.accountBalances.map(acc => (
                 <button 
                   key={acc.id} 
                   className="glass" 
