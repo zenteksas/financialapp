@@ -22,7 +22,11 @@ const CURRENCIES = [
   { code: 'EUR', name: 'Euro', symbol: '€' }
 ];
 
-const ACCOUNT_COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+const ACCOUNT_COLORS = [
+  '#10b981', '#3b82f6', '#f59e0b', '#ef4444',
+  '#8b5cf6', '#ec4899', '#f97316', '#06b6d4',
+  '#64748b', '#a3e635'
+];
 
 // Format number with dot thousands separator
 const formatWithDots = (val) => {
@@ -46,7 +50,7 @@ const OnboardingView = ({ onComplete }) => {
 
   // Multiple accounts support
   const [accounts, setAccounts] = useState([
-    { name: '', balanceRaw: '', colorIndex: 0 }
+    { name: '', balanceRaw: '', colorIndex: 0, includeInTotal: true }
   ]);
 
   const nextStep = () => setStep(s => s + 1);
@@ -65,7 +69,7 @@ const OnboardingView = ({ onComplete }) => {
   const addAccount = () => {
     setAccounts(prev => [
       ...prev,
-      { name: '', balanceRaw: '', colorIndex: prev.length % ACCOUNT_COLORS.length }
+      { name: '', balanceRaw: '', colorIndex: prev.length % ACCOUNT_COLORS.length, includeInTotal: true }
     ]);
   };
 
@@ -77,12 +81,12 @@ const OnboardingView = ({ onComplete }) => {
   const handleFinish = () => {
     const initialAccounts = accounts
       .filter(a => a.name.trim())
-      .map((a, i) => ({
+      .map((a) => ({
         name: a.name.trim(),
         balance: parseFormatted(a.balanceRaw),
         icon: 'Wallet',
         color: ACCOUNT_COLORS[a.colorIndex % ACCOUNT_COLORS.length],
-        includeInTotal: true
+        includeInTotal: a.includeInTotal !== false
       }));
 
     onComplete({
@@ -163,8 +167,9 @@ const OnboardingView = ({ onComplete }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {accounts.map((acc, index) => (
                 <div key={index} className="glass" style={styles.accountCard}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                    <div style={{ ...styles.colorDot, backgroundColor: ACCOUNT_COLORS[acc.colorIndex % ACCOUNT_COLORS.length] }} />
+                  {/* Header */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: ACCOUNT_COLORS[acc.colorIndex % ACCOUNT_COLORS.length], flexShrink: 0 }} />
                     <span style={{ fontWeight: '600', fontSize: '0.85rem', color: 'var(--text-muted)', flex: 1 }}>
                       {index === 0 ? 'Cuenta Principal ✱' : `Cuenta ${index + 1}`}
                     </span>
@@ -175,6 +180,7 @@ const OnboardingView = ({ onComplete }) => {
                     )}
                   </div>
 
+                  {/* Nombre */}
                   <div style={{ marginBottom: '10px' }}>
                     <input
                       type="text"
@@ -186,7 +192,8 @@ const OnboardingView = ({ onComplete }) => {
                     />
                   </div>
 
-                  <div>
+                  {/* Saldo */}
+                  <div style={{ marginBottom: '14px' }}>
                     <input
                       type="text"
                       inputMode="numeric"
@@ -196,6 +203,64 @@ const OnboardingView = ({ onComplete }) => {
                       style={styles.input}
                     />
                   </div>
+
+                  {/* Color selector */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: '600' }}>COLOR</p>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {ACCOUNT_COLORS.map((color, ci) => (
+                        <button
+                          key={ci}
+                          type="button"
+                          onClick={() => updateAccount(index, 'colorIndex', ci)}
+                          style={{
+                            width: '28px', height: '28px', borderRadius: '50%',
+                            backgroundColor: color, border: 'none', cursor: 'pointer',
+                            outline: acc.colorIndex === ci ? `3px solid white` : '3px solid transparent',
+                            outlineOffset: '2px',
+                            transition: 'outline 0.15s',
+                            flexShrink: 0
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Incluir en balance */}
+                  <button
+                    type="button"
+                    onClick={() => updateAccount(index, 'includeInTotal', !acc.includeInTotal)}
+                    style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+                      padding: '10px 12px', borderRadius: '12px', cursor: 'pointer',
+                      backgroundColor: acc.includeInTotal ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${acc.includeInTotal ? 'rgba(16,185,129,0.4)' : 'var(--glass-border)'}`,
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    {/* Toggle pill */}
+                    <div style={{
+                      width: '36px', height: '20px', borderRadius: '10px', flexShrink: 0,
+                      backgroundColor: acc.includeInTotal ? '#10b981' : 'rgba(255,255,255,0.15)',
+                      position: 'relative', transition: 'background-color 0.2s',
+                    }}>
+                      <div style={{
+                        width: '14px', height: '14px', borderRadius: '50%',
+                        backgroundColor: 'white', position: 'absolute',
+                        top: '3px', left: acc.includeInTotal ? '19px' : '3px',
+                        transition: 'left 0.2s',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                      }} />
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                      <p style={{ fontSize: '0.82rem', fontWeight: '600', color: acc.includeInTotal ? '#10b981' : 'var(--text-muted)' }}>
+                        {acc.includeInTotal ? 'Incluida en el balance general' : 'Excluida del balance general'}
+                      </p>
+                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '1px' }}>
+                        {acc.includeInTotal ? 'Este dinero se suma al total' : 'Solo para control personal'}
+                      </p>
+                    </div>
+                  </button>
                 </div>
               ))}
             </div>
