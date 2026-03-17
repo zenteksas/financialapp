@@ -106,11 +106,11 @@ function App() {
   };
 
   const handleSaveTransaction = (newTx) => {
+    // db.addTransaction now handles both create (no id) and update (existing id)
     db.addTransaction(newTx);
     setEditingTransaction(null);
-    setSelectedCategoryId(null); // Clear after use
+    setSelectedCategoryId(null);
     loadData();
-    // No need to switch tab if editing from dashboard
   };
 
   const handleEditTransaction = (tx) => {

@@ -31,7 +31,18 @@ export const db ={
   getTransactions: () => db.get(DB_KEYS.TRANSACTIONS),
   addTransaction: (transaction) => {
     const list = db.getTransactions();
-    list.unshift({ ...transaction, id: Date.now().toString() });
+    if (transaction.id) {
+      // Edit existing transaction
+      const idx = list.findIndex(t => t.id === transaction.id);
+      if (idx !== -1) {
+        list[idx] = { ...transaction };
+      } else {
+        list.unshift({ ...transaction });
+      }
+    } else {
+      // Create new transaction
+      list.unshift({ ...transaction, id: Date.now().toString() });
+    }
     db.save(DB_KEYS.TRANSACTIONS, list);
     return list;
   },
