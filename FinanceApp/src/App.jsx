@@ -72,8 +72,8 @@ function App() {
   const [debts, setDebts] = useState([]);
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [userProfile, setUserProfile] = useState(db.getProfile());
-  const [currency, setCurrency] = useState(db.getCurrency());
+  const [userProfile, setUserProfile] = useState({ name: '', avatar: '', onboardingComplete: true }); // Default to avoid crash
+  const [currency, setCurrency] = useState('COP');
   const [payments, setPayments] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -108,24 +108,43 @@ function App() {
   const [editingPayment, setEditingPayment] = useState(null);
 
   useEffect(() => {
-    loadData();
+    const initApp = async () => {
+      await db.init();
+      await loadData();
+    };
+    
+    initApp();
+    
     // Listen for cross-component data updates
     const handleUpdate = () => loadData();
     window.addEventListener('dataUpdated', handleUpdate);
     return () => window.removeEventListener('dataUpdated', handleUpdate);
   }, []);
 
-  const loadData = () => {
-    setTransactions(db.getTransactions());
-    setDebts(db.getDebts());
-    setAccounts(db.getAccounts());
-    setCategories(db.getCategories());
-    setUserProfile(db.getProfile());
-    setCurrency(db.getCurrency());
-    setTotals(db.getTotals());
-    setPayments(db.getPayments());
-    const newNotes = db.getActiveNotifications();
+  const loadData = async () => {
+    const [txs, dbDebts, accs, cats, profile, curr, pays, newNotes] = await Promise.all([
+      db.getTransactions(),
+      db.getDebts(),
+      db.getAccounts(),
+      db.getCategories(),
+      db.getProfile(),
+      db.getCurrency(),
+      db.getPayments(),
+      db.getActiveNotifications()
+    ]);
+
+    setTransactions(txs);
+    setDebts(dbDebts);
+    setAccounts(accs);
+    setCategories(cats);
+    setUserProfile(profile);
+    setCurrency(curr);
+    setPayments(pays);
     setNotifications(newNotes);
+    
+    // Process totals separately as it depends on other data (though getTotals also fetches internally)
+    const dbTotals = await db.getTotals();
+    setTotals(dbTotals);
     
     // Check if we have NEW notifications that weren't there before
     const prevIds = prevNotificationsRef.current.map(n => n.id);
@@ -141,18 +160,18 @@ function App() {
     prevNotificationsRef.current = newNotes;
   };
 
-  const handleSaveAccount = (data) => {
+  const handleSaveAccount = async (data) => {
     const processedData = {
       ...data,
       balance: parseFloat(data.balance) || 0
     };
-    db.addAccount(processedData);
-    loadData();
+    await db.addAccount(processedData);
+    await loadData();
   };
 
-  const handleDeleteAccount = (id) => {
-    db.deleteAccount(id);
-    loadData();
+  const handleDeleteAccount = async (id) => {
+    await db.deleteAccount(id);
+    await loadData();
     setIsAccountModalOpen(false);
   };
 
@@ -166,12 +185,12 @@ function App() {
     setIsAccountModalOpen(true);
   };
 
-  const handleSaveTransaction = (newTx) => {
+  const handleSaveTransaction = async (newTx) => {
     // db.addTransaction now handles both create (no id) and update (existing id)
-    db.addTransaction(newTx);
+    await db.addTransaction(newTx);
     setEditingTransaction(null);
     setSelectedCategoryId(null);
-    loadData();
+    await loadData();
   };
 
   const handleEditTransaction = (tx) => {
@@ -179,40 +198,44 @@ function App() {
     setIsModalOpen(true);
   };
 
-  const handleSaveCategory = (data) => {
-    db.addCategory(data);
-    loadData();
+  const handleSaveCategory = async (data) => {
+    await db.addCategory(data);
+    const updatedCats = await db.getCategories();
+    setCategories(updatedCats);
+    
     // Use the name to find the one we just added if it's new
     if (!data.id) {
-      const updatedCats = db.getCategories();
       const newCat = updatedCats.find(c => c.name === data.name);
       if (newCat) setSelectedCategoryId(newCat.id);
     }
+    await loadData();
   };
 
-  const handleDeleteCategory = (id) => {
-    db.deleteCategory(id);
-    loadData();
+  const handleDeleteCategory = async (id) => {
+    await db.deleteCategory(id);
+    await loadData();
     setIsCategoryModalOpen(false);
   };
 
-  const handleSaveProfile = (data) => {
-    db.saveProfile(data);
-    loadData();
+  const handleSaveProfile = async (data) => {
+    await db.saveProfile(data);
+    await loadData();
   };
 
-  const handleOnboardingComplete = ({ profile, currency, accounts, initialAccount }) => {
-    db.saveProfile(profile);
-    db.saveCurrency(currency);
+  const handleOnboardingComplete = async ({ profile, currency, accounts, initialAccount }) => {
+    await db.saveProfile(profile);
+    await db.saveCurrency(currency);
     // Support both multiple accounts (new) and single account (legacy)
     const accountList = accounts || (initialAccount ? [initialAccount] : []);
     // Assign unique IDs with offset to avoid Date.now() collisions in fast forEach
     const base = Date.now();
-    accountList.forEach((acc, i) => db.addAccount({ ...acc, id: (base + i).toString() }));
+    for (let i = 0; i < accountList.length; i++) {
+        await db.addAccount({ ...accountList[i], id: (base + i).toString() });
+    }
     // Always start at dashboard after onboarding
     setActiveTab('dashboard');
     localStorage.setItem('finance_active_tab', 'dashboard');
-    loadData();
+    await loadData();
   };
 
   const handleSetActiveTab = (tab) => {

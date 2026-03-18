@@ -1,3 +1,5 @@
+import { storage } from './storage';
+
 const DB_KEYS = {
   TRANSACTIONS: 'finance_transactions',
   DEBTS: 'finance_debts',
@@ -20,14 +22,22 @@ const INITIAL_CATEGORIES = [
 
 
 export const db ={
-  // General Storage access
-  get: (key) => JSON.parse(localStorage.getItem(key)) || [],
-  save: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
+  // General Storage access (internal)
+  _get: async (key) => await storage.get(key) || [],
+  _save: async (key, data) => await storage.set(key, data),
+
+  /**
+   * Initialize database and migrate data if necessary.
+   */
+  init: async () => {
+    // Migration from localStorage
+    await storage.migrateFromLocalStorage(Object.values(DB_KEYS));
+  },
 
   // Transactions
-  getTransactions: () => db.get(DB_KEYS.TRANSACTIONS),
-  addTransaction: (transaction) => {
-    const list = db.getTransactions();
+  getTransactions: async () => await db._get(DB_KEYS.TRANSACTIONS),
+  addTransaction: async (transaction) => {
+    const list = await db.getTransactions();
     if (transaction.id) {
       // Edit existing transaction
       const idx = list.findIndex(t => t.id === transaction.id);
@@ -40,123 +50,123 @@ export const db ={
       // Create new transaction
       list.unshift({ ...transaction, id: Date.now().toString() });
     }
-    db.save(DB_KEYS.TRANSACTIONS, list);
+    await db._save(DB_KEYS.TRANSACTIONS, list);
     return list;
   },
 
   // Categories
-  getCategories: () => {
-    const cats = db.get(DB_KEYS.CATEGORIES);
+  getCategories: async () => {
+    const cats = await db._get(DB_KEYS.CATEGORIES);
     if (!cats || cats.length === 0) {
-      db.save(DB_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+      await db._save(DB_KEYS.CATEGORIES, INITIAL_CATEGORIES);
       return INITIAL_CATEGORIES;
     }
     return cats;
   },
-  addCategory: (category) => {
-    const list = db.getCategories();
+  addCategory: async (category) => {
+    const list = await db.getCategories();
     const newCat = { ...category, id: category.id || Date.now().toString() };
     const idx = list.findIndex(c => c.id === newCat.id);
     if (idx !== -1) list[idx] = newCat;
     else list.push(newCat);
-    db.save(DB_KEYS.CATEGORIES, list);
+    await db._save(DB_KEYS.CATEGORIES, list);
     return list;
   },
-  deleteCategory: (id) => {
-    const list = db.getCategories().filter(c => c.id !== id);
-    db.save(DB_KEYS.CATEGORIES, list);
+  deleteCategory: async (id) => {
+    const list = (await db.getCategories()).filter(c => c.id !== id);
+    await db._save(DB_KEYS.CATEGORIES, list);
     return list;
   },
 
   // Accounts
-  getAccounts: () => {
-    const accs = db.get(DB_KEYS.ACCOUNTS);
-    return accs;
+  getAccounts: async () => {
+    const accs = await db._get(DB_KEYS.ACCOUNTS);
+    return Array.isArray(accs) ? accs : [];
   },
-  addAccount: (account) => {
-    const list = db.getAccounts();
+  addAccount: async (account) => {
+    const list = await db.getAccounts();
     const newAcc = { ...account, id: account.id || Date.now().toString() };
     const idx = list.findIndex(a => a.id === newAcc.id);
     if (idx !== -1) list[idx] = newAcc;
     else list.push(newAcc);
-    db.save(DB_KEYS.ACCOUNTS, list);
+    await db._save(DB_KEYS.ACCOUNTS, list);
     return list;
   },
-  deleteAccount: (id) => {
+  deleteAccount: async (id) => {
     // Also delete transactions associated with this account
-    const txList = db.getTransactions().filter(t => 
+    const txList = (await db.getTransactions()).filter(t => 
       !((t.type === 'transfer' && (t.fromAccountId === id || t.toAccountId === id)) ||
         (t.type !== 'transfer' && (t.accountId || 'default') === id))
     );
-    db.save(DB_KEYS.TRANSACTIONS, txList);
+    await db._save(DB_KEYS.TRANSACTIONS, txList);
 
-    const list = db.getAccounts().filter(a => a.id !== id);
-    db.save(DB_KEYS.ACCOUNTS, list);
+    const list = (await db.getAccounts()).filter(a => a.id !== id);
+    await db._save(DB_KEYS.ACCOUNTS, list);
     return list;
   },
 
   // Payments (Recurring)
-  getPayments: () => db.get(DB_KEYS.PAYMENTS),
-  addPayment: (payment) => {
-    const list = db.getPayments();
+  getPayments: async () => await db._get(DB_KEYS.PAYMENTS),
+  addPayment: async (payment) => {
+    const list = await db.getPayments();
     const newPay = { ...payment, id: payment.id || Date.now().toString() };
     const idx = list.findIndex(p => p.id === newPay.id);
     if (idx !== -1) list[idx] = newPay;
     else list.push(newPay);
-    db.save(DB_KEYS.PAYMENTS, list);
+    await db._save(DB_KEYS.PAYMENTS, list);
     return list;
   },
-  deletePayment: (id) => {
-    const list = db.getPayments().filter(p => p.id !== id);
-    db.save(DB_KEYS.PAYMENTS, list);
+  deletePayment: async (id) => {
+    const list = (await db.getPayments()).filter(p => p.id !== id);
+    await db._save(DB_KEYS.PAYMENTS, list);
     return list;
   },
 
   // Debts
-  getDebts: () => db.get(DB_KEYS.DEBTS),
-  addDebt: (debt) => {
-    const list = db.getDebts();
+  getDebts: async () => await db._get(DB_KEYS.DEBTS),
+  addDebt: async (debt) => {
+    const list = await db.getDebts();
     const newDebt = { ...debt, id: debt.id || Date.now().toString() };
     const idx = list.findIndex(d => d.id === newDebt.id);
     if (idx !== -1) list[idx] = newDebt;
     else list.push(newDebt);
-    db.save(DB_KEYS.DEBTS, list);
+    await db._save(DB_KEYS.DEBTS, list);
     return list;
   },
-  deleteDebt: (id) => {
-    const list = db.getDebts().filter(d => d.id !== id);
-    db.save(DB_KEYS.DEBTS, list);
+  deleteDebt: async (id) => {
+    const list = (await db.getDebts()).filter(d => d.id !== id);
+    await db._save(DB_KEYS.DEBTS, list);
     return list;
   },
 
   // Reminders
-  getReminders: () => db.get(DB_KEYS.REMINDERS),
-  addReminder: (reminder) => {
-    const list = db.getReminders();
+  getReminders: async () => await db._get(DB_KEYS.REMINDERS),
+  addReminder: async (reminder) => {
+    const list = await db.getReminders();
     const newRem = { ...reminder, id: reminder.id || Date.now().toString(), completed: false };
     const idx = list.findIndex(r => r.id === newRem.id);
     if (idx !== -1) list[idx] = newRem;
     else list.push(newRem);
-    db.save(DB_KEYS.REMINDERS, list);
+    await db._save(DB_KEYS.REMINDERS, list);
     return list;
   },
-  deleteReminder: (id) => {
-    const list = db.getReminders().filter(r => r.id !== id);
-    db.save(DB_KEYS.REMINDERS, list);
+  deleteReminder: async (id) => {
+    const list = (await db.getReminders()).filter(r => r.id !== id);
+    await db._save(DB_KEYS.REMINDERS, list);
     return list;
   },
-  toggleReminderComplete: (id) => {
-    const list = db.getReminders();
+  toggleReminderComplete: async (id) => {
+    const list = await db.getReminders();
     const idx = list.findIndex(r => r.id === id);
     if (idx !== -1) {
       list[idx].completed = !list[idx].completed;
-      db.save(DB_KEYS.REMINDERS, list);
+      await db._save(DB_KEYS.REMINDERS, list);
     }
     return list;
   },
 
   // Notifications Logic
-  getActiveNotifications: () => {
+  getActiveNotifications: async () => {
     const now = new Date();
     const todayDay = now.getDate();
     
@@ -172,14 +182,14 @@ export const db ={
     const notifications = [];
 
     // 1. Check habitual payments for TODAY
-    const payments = db.getPayments();
+    const payments = await db.getPayments();
     payments.forEach(p => {
       if (parseInt(p.date) === todayDay) {
         notifications.push({
           id: `pay-${p.id}`,
           type: 'payment',
           title: `Pago hoy: ${p.name}`,
-          message: `Recuerda realizar el pago de ${p.amount.toLocaleString()} ${db.getCurrency()}.`,
+          message: `Recuerda realizar el pago de ${p.amount.toLocaleString()} ${db.getCurrencySync()}.`,
           color: p.color || 'var(--primary)',
           data: p
         });
@@ -187,7 +197,7 @@ export const db ={
     });
 
     // 2. Check personal reminders (only if date passed OR today and time passed)
-    const reminders = db.getReminders();
+    const reminders = await db.getReminders();
     reminders.forEach(r => {
       const isPastDate = r.date < todayLocalStr;
       const isToday = r.date === todayLocalStr;
@@ -209,62 +219,67 @@ export const db ={
   },
 
   // User Prefs / Income
-  getIncome: () => {
-    const prefs = db.get(DB_KEYS.USER_PREFS);
+  getIncome: async () => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS);
     return prefs.income || 0;
   },
-  saveIncome: (income) => {
-    const prefs = db.get(DB_KEYS.USER_PREFS);
-    db.save(DB_KEYS.USER_PREFS, { ...prefs, income });
+  saveIncome: async (income) => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS);
+    await db._save(DB_KEYS.USER_PREFS, { ...prefs, income });
   },
 
   // Expected Expenses
-  getExpectedExpenses: () => {
-    const prefs = db.get(DB_KEYS.USER_PREFS);
+  getExpectedExpenses: async () => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS);
     return prefs.expectedExpenses || 0;
   },
-  saveExpectedExpenses: (expectedExpenses) => {
-    const prefs = db.get(DB_KEYS.USER_PREFS);
-    db.save(DB_KEYS.USER_PREFS, { ...prefs, expectedExpenses });
+  saveExpectedExpenses: async (expectedExpenses) => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS);
+    await db._save(DB_KEYS.USER_PREFS, { ...prefs, expectedExpenses });
   },
 
   // Scheduled Payments (for Strategy)
-  getScheduledPayments: () => {
-    const prefs = db.get(DB_KEYS.USER_PREFS);
+  getScheduledPayments: async () => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS);
     return prefs.scheduledPayments || {};
   },
-  saveScheduledPayments: (sp) => {
-    const prefs = db.get(DB_KEYS.USER_PREFS);
-    db.save(DB_KEYS.USER_PREFS, { ...prefs, scheduledPayments: sp });
+  saveScheduledPayments: async (sp) => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS);
+    await db._save(DB_KEYS.USER_PREFS, { ...prefs, scheduledPayments: sp });
   },
 
   // Currency
-  getCurrency: () => {
-    return localStorage.getItem(DB_KEYS.CURRENCY) || 'COP';
+  getCurrency: async () => {
+    return (await storage.get(DB_KEYS.CURRENCY)) || 'COP';
   },
-  saveCurrency: (currency) => {
-    localStorage.setItem(DB_KEYS.CURRENCY, currency);
+  getCurrencySync: () => {
+    // Legacy fallback for some UI parts if needed, but we should aim to avoid it
+    return 'COP'; 
+  },
+  saveCurrency: async (currency) => {
+    await storage.set(DB_KEYS.CURRENCY, currency);
   },
 
   // Profile
-  getProfile: () => {
+  getProfile: async () => {
     const defaultProfile = {
       name: '',
       avatar: '', // Icon name or empty for initials
       onboardingComplete: false
     };
-    return JSON.parse(localStorage.getItem(DB_KEYS.PROFILE)) || defaultProfile;
+    return (await storage.get(DB_KEYS.PROFILE)) || defaultProfile;
   },
-  saveProfile: (profile) => {
-    localStorage.setItem(DB_KEYS.PROFILE, JSON.stringify(profile));
+  saveProfile: async (profile) => {
+    await storage.set(DB_KEYS.PROFILE, profile);
   },
 
   // Calculate totals
-  getTotals: () => {
-    const txs = Array.isArray(db.getTransactions()) ? db.getTransactions() : [];
-    const debts = Array.isArray(db.getDebts()) ? db.getDebts() : [];
-    const accounts = Array.isArray(db.getAccounts()) ? db.getAccounts() : [];
-    const income = db.getIncome() || 0;
+  getTotals: async () => {
+    const txs = await db.getTransactions();
+    const debts = await db.getDebts();
+    const accounts = await db.getAccounts();
+    const income = await db.getIncome();
+    const currency = await db.getCurrency();
     
     // Initial balance from accounts marked for inclusion
     const initialBalance = accounts
@@ -333,13 +348,11 @@ export const db ={
   },
 
   // Analytics Helpers
-  getTransactionsByPeriod: (period = 'month') => {
-    const txs = db.getTransactions();
+  getTransactionsByPeriod: async (period = 'month') => {
+    const txs = await db.getTransactions();
     const now = new Date();
     
     return txs.filter(tx => {
-      // Note: In a real app, we'd parse tx.date or have a timestamp
-      // For this demo, we'll assume tx.id (Date.now()) is the timestamp
       const txDate = new Date(parseInt(tx.id));
       
       if (period === 'day') {
@@ -360,33 +373,30 @@ export const db ={
   },
 
   // Factory Reset
-  reset: () => {
-    Object.values(DB_KEYS).forEach(key => {
-      localStorage.removeItem(key);
-    });
+  reset: async () => {
+    await storage.clear();
   },
 
   // Backup & Restore
-  exportFullData: () => {
+  exportFullData: async () => {
     const data = {};
-    Object.keys(DB_KEYS).forEach(key => {
-      data[DB_KEYS[key]] = db.get(DB_KEYS[key]);
-    });
-    // Add active tab if exists
+    for (const key of Object.values(DB_KEYS)) {
+      data[key] = await storage.get(key);
+    }
+    // Add active tab
     data['finance_active_tab'] = localStorage.getItem('finance_active_tab') || 'dashboard';
     return data;
   },
 
-  importFullData: (data) => {
+  importFullData: async (data) => {
     if (!data || typeof data !== 'object') return false;
     
-    // Validate that it looks like our data (optional but good)
     const keys = Object.values(DB_KEYS);
-    keys.forEach(key => {
+    for (const key of keys) {
       if (data[key]) {
-        db.save(key, data[key]);
+        await storage.set(key, data[key]);
       }
-    });
+    }
 
     if (data['finance_active_tab']) {
       localStorage.setItem('finance_active_tab', data['finance_active_tab']);

@@ -24,15 +24,15 @@ const RemindersModule = () => {
     loadReminders();
   }, []);
 
-  const loadReminders = () => {
-    setReminders(db.getReminders());
+  const loadReminders = async () => {
+    setReminders(await db.getReminders());
   };
 
-  const handleAddReminder = (e) => {
+  const handleAddReminder = async (e) => {
     e.preventDefault();
     if (!newReminder.title.trim()) return;
     
-    db.addReminder(newReminder);
+    await db.addReminder(newReminder);
     setNewReminder({
       title: '',
       date: new Date().toISOString().split('T')[0],
@@ -40,21 +40,21 @@ const RemindersModule = () => {
       color: '#3b82f6'
     });
     setIsFormOpen(false);
-    loadReminders();
+    await loadReminders();
     
     // Dispatch custom event to update notification bell in App.jsx
     window.dispatchEvent(new Event('dataUpdated'));
   };
 
-  const handleToggleComplete = (id) => {
-    db.toggleReminderComplete(id);
-    loadReminders();
+  const handleToggleComplete = async (id) => {
+    await db.toggleReminderComplete(id);
+    await loadReminders();
     window.dispatchEvent(new Event('dataUpdated'));
   };
 
-  const handleDelete = (id) => {
-    db.deleteReminder(id);
-    loadReminders();
+  const handleDelete = async (id) => {
+    await db.deleteReminder(id);
+    await loadReminders();
     window.dispatchEvent(new Event('dataUpdated'));
   };
 

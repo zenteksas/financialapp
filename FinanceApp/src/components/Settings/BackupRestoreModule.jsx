@@ -5,9 +5,9 @@ import { db } from '../../utils/db';
 const BackupRestoreModule = () => {
   const [status, setStatus] = useState({ type: null, message: '' });
 
-  const handleExport = () => {
+  const handleExport = async () => {
     try {
-      const data = db.exportFullData();
+      const data = await db.exportFullData();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -29,10 +29,10 @@ const BackupRestoreModule = () => {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const data = JSON.parse(event.target.result);
-        if (db.importFullData(data)) {
+        if (await db.importFullData(data)) {
           setStatus({ type: 'success', message: 'Datos restaurados correctamente. La página se recargará para aplicar los cambios.' });
           setTimeout(() => {
             window.location.reload();

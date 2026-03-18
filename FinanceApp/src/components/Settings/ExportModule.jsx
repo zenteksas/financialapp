@@ -6,10 +6,12 @@ const ExportModule = ({ currency }) => {
   const [status, setStatus] = useState({ type: null, message: '' });
   const [exportType, setExportType] = useState('all'); // all, income, expense
 
-  const getFilteredTransactions = () => {
-    const transactions = db.getTransactions();
-    const categories = db.getCategories();
-    const accounts = db.getAccounts();
+  const getFilteredTransactions = async () => {
+    const [transactions, categories, accounts] = await Promise.all([
+      db.getTransactions(),
+      db.getCategories(),
+      db.getAccounts()
+    ]);
 
     return transactions.filter(tx => {
       if (exportType === 'all') return true;
@@ -25,9 +27,9 @@ const ExportModule = ({ currency }) => {
     });
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     try {
-      const txs = getFilteredTransactions();
+      const txs = await getFilteredTransactions();
       if (txs.length === 0) {
         setStatus({ type: 'error', message: 'No hay transacciones para exportar.' });
         return;
@@ -63,8 +65,8 @@ const ExportModule = ({ currency }) => {
     }
   };
 
-  const handleExportPDF = () => {
-    const txs = getFilteredTransactions();
+  const handleExportPDF = async () => {
+    const txs = await getFilteredTransactions();
     if (txs.length === 0) {
       setStatus({ type: 'error', message: 'No hay transacciones para exportar.' });
       return;
