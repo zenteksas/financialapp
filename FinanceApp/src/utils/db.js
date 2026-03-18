@@ -289,6 +289,30 @@ export const db ={
     await storage.set(DB_KEYS.PROFILE, profile);
   },
 
+  // Backup & Restore
+  exportFullData: async () => {
+    const data = {};
+    for (const storageKey of Object.values(DB_KEYS)) {
+      data[storageKey] = await storage.get(storageKey);
+    }
+    return data;
+  },
+  importFullData: async (data) => {
+    try {
+      if (!data || typeof data !== 'object') return false;
+      
+      for (const [keyName, storageKey] of Object.entries(DB_KEYS)) {
+        if (data[storageKey] !== undefined) {
+          await storage.set(storageKey, data[storageKey]);
+        }
+      }
+      return true;
+    } catch (e) {
+      console.error('Error importing data', e);
+      return false;
+    }
+  },
+
   // Calculate totals
   getTotals: async () => {
     const txs = await db.getTransactions();
