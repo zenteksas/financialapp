@@ -84,6 +84,7 @@ function App() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [hasUnread, setHasUnread] = useState(false);
   
   const [editingAccount, setEditingAccount] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -129,9 +130,12 @@ function App() {
     // Check if we have NEW notifications that weren't there before
     const prevIds = prevNotificationsRef.current.map(n => n.id);
     const hasNewNotification = newNotes.some(n => !prevIds.includes(n.id));
-    
     if (hasNewNotification) {
+      setHasUnread(true);
       playAlertSound();
+    } else if (newNotes.length > 0 && prevNotificationsRef.current.length === 0) {
+      // Initial load with existing notifications
+      setHasUnread(true);
     }
     
     prevNotificationsRef.current = newNotes;
@@ -456,12 +460,15 @@ function App() {
           </span>
         </button>
         <button 
-          style={{ ...styles.menuBtn, color: notifications.length > 0 ? '#ffffff' : 'var(--text-heading)' }} 
-          onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+          style={{ ...styles.menuBtn, color: hasUnread ? '#ffffff' : 'var(--text-heading)' }} 
+          onClick={() => {
+            if (!isNotificationsOpen) setHasUnread(false);
+            setIsNotificationsOpen(!isNotificationsOpen);
+          }}
         >
           <div style={{ position: 'relative' }}>
-            <Bell size={24} fill={notifications.length > 0 ? '#ffffff' : 'none'} />
-            {notifications.length > 0 && (
+            <Bell size={24} fill={hasUnread ? '#ffffff' : 'none'} />
+            {hasUnread && (
               <span style={{
                 position: 'absolute', top: -4, right: -4, width: '10px', height: '10px',
                 borderRadius: '50%', backgroundColor: 'var(--danger)', border: '2px solid var(--bg-color)'
