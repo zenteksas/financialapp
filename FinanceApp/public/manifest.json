@@ -1,9 +1,10 @@
 {
-  "short_name": "FinanceApp",
-  "name": "Gestor de Finanzas Personales",
+  "short_name": "Zentek",
+  "name": "Zentek FinanceApp",
+  "description": "Gestiona tus deudas, ahorros y movimientos financieros con una interfaz premium y segura.",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/5906/5906109.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -11,7 +12,7 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#0d0d0d",
-  "background_color": "#0d0d0d",
+  "theme_color": "#0b0f0b",
+  "background_color": "#0b0f0b",
   "orientation": "portrait"
 }
