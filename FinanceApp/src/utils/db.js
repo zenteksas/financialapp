@@ -261,10 +261,10 @@ export const db ={
 
   // Calculate totals
   getTotals: () => {
-    const txs = db.getTransactions();
-    const debts = db.getDebts();
-    const accounts = db.getAccounts();
-    const income = db.getIncome();
+    const txs = Array.isArray(db.getTransactions()) ? db.getTransactions() : [];
+    const debts = Array.isArray(db.getDebts()) ? db.getDebts() : [];
+    const accounts = Array.isArray(db.getAccounts()) ? db.getAccounts() : [];
+    const income = db.getIncome() || 0;
     
     // Initial balance from accounts marked for inclusion
     const initialBalance = accounts
@@ -302,8 +302,8 @@ export const db ={
       return acc;
     }, { balance: initialBalance, income: 0, expenses: 0 });
 
-    const totalDebt = debts.reduce((sum, d) => sum + d.monto, 0);
-    const totalDebtQuota = debts.reduce((sum, d) => sum + d.cuotaMinima, 0);
+    const totalDebt = debts.reduce((sum, d) => sum + (parseFloat(d.monto) || 0), 0);
+    const totalDebtQuota = debts.reduce((sum, d) => sum + (parseFloat(d.cuotaMinima) || 0), 0);
     
     const accountBalances = accounts.map(acc => {
       const accTxs = txs.filter(t => 

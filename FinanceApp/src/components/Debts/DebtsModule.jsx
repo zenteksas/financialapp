@@ -78,11 +78,11 @@ const DebtsModule = ({ debts, totals, onUpdate, currency }) => {
             <div className="glass" style={styles.summaryCard}>
               <div style={styles.summaryItem}>
                 <span style={styles.summaryLabel}>Deuda Total</span>
-                <h2 style={styles.summaryVal}>{totals.totalDebt.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</h2>
+                <h2 style={styles.summaryVal}>{(totals.totalDebt || 0).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</h2>
               </div>
               <div style={styles.summaryItem}>
                 <span style={styles.summaryLabel}>Cuota Mensual</span>
-                <h2 style={styles.summaryVal}>{totals.totalDebtQuota.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</h2>
+                <h2 style={styles.summaryVal}>{(totals.totalDebtQuota || 0).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}</h2>
               </div>
             </div>
 

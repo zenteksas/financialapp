@@ -89,7 +89,15 @@ function App() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [defaultCategoryType, setDefaultCategoryType] = useState('expense');
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
-  const [totals, setTotals] = useState({ balance: 0, income: 0, expenses: 0, accountBalances: [] });
+  const [totals, setTotals] = useState({ 
+    balance: 0, 
+    income: 0, 
+    expenses: 0, 
+    totalDebt: 0, 
+    totalDebtQuota: 0, 
+    debtRatio: 0, 
+    accountBalances: [] 
+  });
   const [selectedAccountId, setSelectedAccountId] = useState(null); // null means "All accounts"
   const [isAccountSelectorOpen, setIsAccountSelectorOpen] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);

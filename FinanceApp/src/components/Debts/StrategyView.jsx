@@ -58,7 +58,7 @@ const StrategyView = ({ debts, currency }) => {
         <div style={{ marginTop: '24px' }}>
           <div className="glass" style={styles.resultCard}>
             <h2 style={{ fontSize: '1.5rem', color: 'var(--secondary)', marginBottom: '4px' }}>
-              ¡Libre en {results.totalMonths} Meses!
+              ¡Libre en {results?.totalMonths || 0} Meses!
             </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Proyección estimada de libertad financiera</p>
           </div>
