@@ -34,6 +34,13 @@ export const db ={
     await storage.migrateFromLocalStorage(Object.values(DB_KEYS));
   },
 
+  /**
+   * Factory reset - clear all IndexedDB data
+   */
+  reset: async () => {
+    await storage.clear();
+  },
+
   // Transactions
   getTransactions: async () => await db._get(DB_KEYS.TRANSACTIONS),
   addTransaction: async (transaction) => {

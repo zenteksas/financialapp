@@ -420,9 +420,9 @@ function App() {
                   gap: '10px',
                   margin: '0 auto'
                 }}
-                onClick={() => {
+                onClick={async () => {
                   if (window.confirm('¿Estás seguro de que quieres reiniciar la aplicación? Se borrarán TODOS tus datos permanentemente.')) {
-                    db.reset();
+                    await db.reset();
                     window.location.reload();
                   }
                 }}
