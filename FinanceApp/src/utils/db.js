@@ -186,7 +186,7 @@ export const db ={
     payments.forEach(p => {
       if (parseInt(p.date) === todayDay) {
         notifications.push({
-          id: `pay-${p.id}`,
+          id: `pay-${p.id}-${y}-${m}`,
           type: 'payment',
           title: `Pago hoy: ${p.name}`,
           message: `Recuerda realizar el pago de ${p.amount.toLocaleString()} ${db.getCurrencySync()}.`,
@@ -216,6 +216,22 @@ export const db ={
     });
 
     return notifications;
+  },
+
+  // Notification Tracking
+  getReadNotificationIds: async () => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS) || {};
+    return prefs.readNotificationIds || [];
+  },
+  markNotificationsAsRead: async (ids) => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS) || {};
+    const current = prefs.readNotificationIds || [];
+    const newIds = [...new Set([...current, ...ids])];
+    
+    // Limit array size to avoid infinite growth
+    if (newIds.length > 100) newIds.splice(0, newIds.length - 100);
+    
+    await db._save(DB_KEYS.USER_PREFS, { ...prefs, readNotificationIds: newIds });
   },
 
   // User Prefs / Income

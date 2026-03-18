@@ -146,15 +146,18 @@ function App() {
     const dbTotals = await db.getTotals();
     setTotals(dbTotals);
     
-    // Check if we have NEW notifications that weren't there before
-    const prevIds = prevNotificationsRef.current.map(n => n.id);
-    const hasNewNotification = newNotes.some(n => !prevIds.includes(n.id));
-    if (hasNewNotification) {
+    // Check if we have NEW notifications based on persistent read state
+    const readIds = await db.getReadNotificationIds();
+    const unreadCount = newNotes.filter(n => !readIds.includes(n.id)).length;
+    
+    if (unreadCount > 0) {
       setHasUnread(true);
-      playAlertSound();
-    } else if (newNotes.length > 0 && prevNotificationsRef.current.length === 0) {
-      // Initial load with existing notifications
-      setHasUnread(true);
+      
+      const prevIds = prevNotificationsRef.current.map(n => n.id);
+      const hasBrandNew = newNotes.some(n => !prevIds.includes(n.id) && !readIds.includes(n.id));
+      if (hasBrandNew) playAlertSound();
+    } else {
+      setHasUnread(false);
     }
     
     prevNotificationsRef.current = newNotes;
@@ -484,8 +487,14 @@ function App() {
         </button>
         <button 
           style={{ ...styles.menuBtn, color: hasUnread ? '#ffffff' : 'var(--text-heading)' }} 
-          onClick={() => {
-            if (!isNotificationsOpen) setHasUnread(false);
+          onClick={async () => {
+            if (!isNotificationsOpen) {
+              setHasUnread(false);
+              const currentIds = notifications.map(n => n.id);
+              if (currentIds.length > 0) {
+                await db.markNotificationsAsRead(currentIds);
+              }
+            }
             setIsNotificationsOpen(!isNotificationsOpen);
           }}
         >
