@@ -23,10 +23,8 @@ const Sidebar = ({ isOpen, onClose, userProfile, totalBalance, onNavigate, activ
     { id: 'accounts', label: 'Cuentas', icon: Wallet },
     { id: 'stats', label: 'Gráficos', icon: PieChart },
     { id: 'categories', label: 'Categorías', icon: Tag },
-    { id: 'debts', label: 'Deudas', icon: Wallet },
+    { id: 'tools', label: 'Herramientas', icon: RefreshCw },
     { id: 'payments', label: 'Pagos habituales', icon: Repeat },
-    { id: 'backup', label: 'Respaldar / Backup', icon: Download },
-    { id: 'export', label: 'Exportar (CSV/PDF)', icon: FileText },
     { id: 'reminders', label: 'Recordatorios', icon: Bell },
     { id: 'settings', label: 'Ajustes', icon: Settings },
   ];
@@ -37,6 +35,29 @@ const Sidebar = ({ isOpen, onClose, userProfile, totalBalance, onNavigate, activ
     { id: 'rate', label: 'Valore la aplicación', icon: Star },
     { id: 'support', label: 'Contacte con el equipo', icon: MessageSquare },
   ];
+  const handleAction = async (id) => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    
+    if (id === 'share') {
+      const shareData = {
+        title: 'ZenFinance',
+        text: 'Gestiona tus finanzas de forma profesional con ZenFinance ✨',
+        url: 'https://play.google.com/store/apps/details?id=com.zentek.financeapp' // Matching build.gradle
+      };
+      if (navigator.share && isMobile) {
+        try { await navigator.share(shareData); } catch (e) {}
+      } else {
+        const text = encodeURIComponent(`${shareData.text} ${shareData.url}`);
+        window.open(`https://wa.me/?text=${text}`, '_blank');
+      }
+    } else if (id === 'rate') {
+      window.open('https://play.google.com/store/apps/details?id=com.zentek.financeapp', '_blank');
+    } else if (id === 'support') {
+      window.location.href = 'mailto:soporte@zenteksas.com?subject=Soporte ZenFinance';
+    } else if (id === 'ads') {
+      alert('¡Gracias por tu interés! ZenFinance es actualmente gratuita y sin anuncios. El modo Premium estará disponible próximamente en la Play Store.');
+    }
+  };
 
   return (
     <>
@@ -87,7 +108,10 @@ const Sidebar = ({ isOpen, onClose, userProfile, totalBalance, onNavigate, activ
             <button 
               key={item.id} 
               style={styles.menuItem(false)}
-              onClick={() => onClose()}
+              onClick={() => {
+                onClose();
+                handleAction(item.id);
+              }}
             >
               <item.icon size={22} style={styles.icon} />
               <span>{item.label}</span>

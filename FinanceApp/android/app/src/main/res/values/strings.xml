@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Zentek FinanceApp</string>
-    <string name="title_activity_main">Zentek FinanceApp</string>
+    <string name="app_name">ZenFinance</string>
+    <string name="title_activity_main">ZenFinance</string>
     <string name="package_name">com.zentek.financeapp</string>
     <string name="custom_url_scheme">com.zentek.financeapp</string>
 </resources>

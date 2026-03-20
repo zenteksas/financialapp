@@ -33,11 +33,14 @@ const PaymentModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency
     if (val === null || val === undefined || val === '') return '';
     const numericStr = val.toString().replace(/\D/g, '');
     if (!numericStr) return '';
-    return '$ ' + numericStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return numericStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
 
   const handleAmountChange = (e) => {
-    const rawValue = e.target.value.replace(/\D/g, '');
+    let rawValue = e.target.value.replace(/\D/g, '');
+    if (rawValue.length > 1 && rawValue.startsWith('0')) {
+      rawValue = rawValue.replace(/^0+/, '');
+    }
     setFormData(prev => ({ ...prev, amount: rawValue }));
   };
 
@@ -164,17 +167,17 @@ const styles = {
     alignItems: 'flex-end',
     justifyContent: 'center',
     zIndex: 6000,
-    backdropFilter: 'blur(6px)',
+    backdropFilter: 'blur(8px)',
   },
   modal: {
     width: '100%',
     maxWidth: '550px',
-    maxHeight: '85vh',
+    maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
     borderTopLeftRadius: '32px',
     borderTopRightRadius: '32px',
-    padding: '32px 24px calc(24px + var(--safe-area-bottom))',
+    padding: '32px 24px calc(32px + var(--safe-area-bottom))',
     boxShadow: '0 -10px 40px rgba(0,0,0,0.5)',
     overflowY: 'auto',
     WebkitOverflowScrolling: 'touch',

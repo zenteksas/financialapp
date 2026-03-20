@@ -5,7 +5,9 @@ import {
   Tag, Plus, Smartphone, PiggyBank, Receipt, Maximize2,
   Wallet, Gift, Landmark, HelpCircle, FileText, Users,
   Dumbbell, Bus, Pizza, Wifi, BarChart3, Bike, Footprints,
-  PawPrint, Power, CreditCard, Ruler
+  PawPrint, Power, CreditCard, Ruler, Music, Camera,
+  Rocket, Star, Gem, Wine, ShieldCheck, Phone,
+  Moon, Sun, Key
 } from 'lucide-react';
 
 const ICONS = { 
@@ -14,7 +16,9 @@ const ICONS = {
   Smartphone, PiggyBank, Receipt, Tag,
   Wallet, Gift, Landmark, HelpCircle, FileText, Users,
   Dumbbell, Bus, Pizza, Wifi, BarChart3, Bike, Footprints,
-  PawPrint, Power, CreditCard, Ruler
+  PawPrint, Power, CreditCard, Ruler, Music, Camera,
+  Rocket, Star, Gem, Wine, ShieldCheck, Phone,
+  Moon, Sun, Key
 };
 
 const CategoryGrid = ({ categories, onCategoryClick, onCreateClick }) => {

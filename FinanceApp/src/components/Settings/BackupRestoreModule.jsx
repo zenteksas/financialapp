@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Download, Upload, AlertTriangle, CheckCircle, FileJson } from 'lucide-react';
 import { db } from '../../utils/db';
 
-const BackupRestoreModule = () => {
+const BackupRestoreModule = ({ compact = false }) => {
   const [status, setStatus] = useState({ type: null, message: '' });
 
   const handleExport = async () => {
@@ -49,10 +49,6 @@ const BackupRestoreModule = () => {
 
   return (
     <div className="animate-fade" style={{ color: 'var(--text-main)' }}>
-      <header style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: '800', marginBottom: '8px' }}>Backup y Restauración</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Protege tu información financiera exportando tus datos o restaurando una copia previa.</p>
-      </header>
 
       {status.message && (
         <div className="glass" style={{ 
@@ -71,64 +67,101 @@ const BackupRestoreModule = () => {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
-        <div className="glass" style={{ padding: '32px', borderRadius: '28px', textAlign: 'center' }}>
-          <div style={{ 
-            width: '64px', height: '64px', borderRadius: '20px', 
-            backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 20px'
-          }}>
-            <Download size={32} />
-          </div>
-          <h3 style={{ marginBottom: '12px', fontSize: '1.2rem' }}>Exportar Datos</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
-            Descarga un archivo JSON con toda tu información: cuentas, transacciones, deudas y categorías.
-          </p>
-          <button onClick={handleExport} style={{
-            width: '100%', padding: '16px', borderRadius: '16px',
-            backgroundColor: 'var(--primary)', color: 'white',
-            fontWeight: '700', border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
-          }}>
-            <FileJson size={20} />
-            Crear Backup JSON
+      {compact ? (
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <button 
+            onClick={handleExport}
+            style={{
+              width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', gap: '16px',
+              border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left',
+              borderBottom: '1px solid var(--glass-border)'
+            }}
+          >
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Download size={20} color="#3b82f6" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: '600', fontSize: '1rem', color: 'var(--text-main)' }}>Exportar Backup JSON</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Descargar copia de seguridad completa</p>
+            </div>
           </button>
-        </div>
 
-        <div className="glass" style={{ padding: '32px', borderRadius: '28px', textAlign: 'center' }}>
-          <div style={{ 
-            width: '64px', height: '64px', borderRadius: '20px', 
-            backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 20px'
-          }}>
-            <Upload size={32} />
-          </div>
-          <h3 style={{ marginBottom: '12px', fontSize: '1.2rem' }}>Restaurar Backup</h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
-            Selecciona un archivo de backup previamente exportado para restaurar tu información.
-          </p>
-          
-          <label style={{
-            width: '100%', padding: '16px', borderRadius: '16px',
-            backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-main)',
-            fontWeight: '700', border: '1px dashed var(--glass-border)', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
-          }}>
-            <Upload size={20} color="var(--secondary)" />
-            Seleccionar Archivo
+          <label 
+            style={{
+              width: '100%', padding: '16px 0', display: 'flex', alignItems: 'center', gap: '16px',
+              border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left'
+            }}
+          >
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Upload size={20} color="#f59e0b" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: '600', fontSize: '1rem', color: 'var(--text-main)' }}>Restaurar Backup JSON</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Cargar datos desde un archivo</p>
+            </div>
             <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
           </label>
-          
-          <div style={{ marginTop: '20px', padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-            <p style={{ fontSize: '0.75rem', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-              <AlertTriangle size={14} />
-              Atención: Los datos actuales serán reemplazados.
+        </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
+          <div className="glass" style={{ padding: '32px', borderRadius: '28px', textAlign: 'center' }}>
+            <div style={{ 
+              width: '64px', height: '64px', borderRadius: '20px', 
+              backgroundColor: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px'
+            }}>
+              <Download size={32} />
+            </div>
+            <h3 style={{ marginBottom: '12px', fontSize: '1.2rem' }}>Exportar Datos</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
+              Descarga un archivo JSON con toda tu información: cuentas, transacciones, deudas y categorías.
             </p>
+            <button onClick={handleExport} style={{
+              width: '100%', padding: '16px', borderRadius: '16px',
+              backgroundColor: 'var(--primary)', color: 'white',
+              fontWeight: '700', border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+            }}>
+              <FileJson size={20} />
+              Crear Backup JSON
+            </button>
+          </div>
+
+          <div className="glass" style={{ padding: '32px', borderRadius: '28px', textAlign: 'center' }}>
+            <div style={{ 
+              width: '64px', height: '64px', borderRadius: '20px', 
+              backgroundColor: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px'
+            }}>
+              <Upload size={32} />
+            </div>
+            <h3 style={{ marginBottom: '12px', fontSize: '1.2rem' }}>Restaurar Backup</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '24px' }}>
+              Selecciona un archivo de backup previamente exportado para restaurar tu información.
+            </p>
+            
+            <label style={{
+              width: '100%', padding: '16px', borderRadius: '16px',
+              backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--text-main)',
+              fontWeight: '700', border: '1px dashed var(--glass-border)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+            }}>
+              <Upload size={20} color="var(--secondary)" />
+              Seleccionar Archivo
+              <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
+            </label>
+            
+            <div style={{ marginTop: '20px', padding: '12px', borderRadius: '12px', backgroundColor: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                <AlertTriangle size={14} />
+                Atención: Los datos actuales serán reemplazados.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -67,11 +67,14 @@ const TransactionModal = ({ isOpen, onClose, onSave, onDelete, categories, accou
     if (val === null || val === undefined || val === '') return '';
     const numericStr = val.toString().replace(/\D/g, '');
     if (!numericStr) return '';
-    return '$ ' + numericStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return numericStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
 
   const handleAmountChange = (e) => {
-    const rawValue = e.target.value.replace(/\D/g, '');
+    let rawValue = e.target.value.replace(/\D/g, '');
+    if (rawValue.length > 1 && rawValue.startsWith('0')) {
+      rawValue = rawValue.replace(/^0+/, '');
+    }
     setAmount(rawValue);
   };
 
@@ -298,7 +301,7 @@ const styles = {
     display: 'flex',
     alignItems: 'flex-end',
     zIndex: 2000,
-    backdropFilter: 'blur(4px)',
+    backdropFilter: 'blur(8px)',
   },
   modal: {
     width: '100%',
@@ -306,6 +309,8 @@ const styles = {
     borderTopRightRadius: '32px',
     padding: '32px 24px calc(32px + var(--safe-area-bottom))',
     boxShadow: '0 -10px 40px rgba(0,0,0,0.5)',
+    maxHeight: '90vh',
+    overflowY: 'auto'
   },
   header: {
     display: 'flex',

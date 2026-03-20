@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Rocket, Info, CheckCircle } from 'lucide-react';
 import { DebtMath } from '../../utils/calculations';
 import { db } from '../../utils/db';
+import FinancialTipCard from '../Layout/FinancialTipCard';
 
 const StrategyView = ({ debts, currency }) => {
   const [strategy, setStrategy] = useState('snowball');
@@ -67,7 +68,10 @@ const StrategyView = ({ debts, currency }) => {
   };
 
   const handleExtraMonthlyChange = (e) => {
-    const rawValue = e.target.value.replace(/\D/g, '');
+    let rawValue = e.target.value.replace(/\D/g, '');
+    if (rawValue.length > 1 && rawValue.startsWith('0')) {
+      rawValue = rawValue.replace(/^0+/, '');
+    }
     setExtraMonthly(rawValue);
   };
 
@@ -203,6 +207,9 @@ const StrategyView = ({ debts, currency }) => {
           </p>
         </div>
       )}
+      <div style={{ marginTop: '24px' }}>
+        <FinancialTipCard />
+      </div>
     </div>
   );
 };
@@ -212,15 +219,15 @@ const styles = {
   inputGroup: { marginBottom: '8px' },
   label: { display: 'block', fontSize: '0.7rem', fontWeight: '800', color: 'var(--text-muted)', marginBottom: '8px', letterSpacing: '0.05em' },
   select: {
-    width: '100%', padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)',
+    width: '100%', padding: '14px', borderRadius: '16px', background: 'rgba(255,255,255,0.05)',
     border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '0.9rem', outline: 'none'
   },
   input: {
-    width: '100%', padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)',
+    width: '100%', padding: '14px', borderRadius: '16px', background: 'rgba(255,255,255,0.05)',
     border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '0.9rem', outline: 'none'
   },
   desc: { fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.5' },
-  resultCard: { padding: '32px 24px', borderRadius: '32px', textAlign: 'center', background: 'var(--surface-color)', border: '1px solid var(--glass-border)' },
+  resultCard: { padding: '32px 24px', borderRadius: '24px', textAlign: 'center', background: 'var(--surface-color)', border: '1px solid var(--glass-border)' },
   statsGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '16px', marginBottom: '24px' },
   statItem: { padding: '16px', borderRadius: '20px', backgroundColor: 'rgba(255,255,255,0.03)', textAlign: 'left', border: '1px solid rgba(255,255,255,0.05)' },
   statLabel: { fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: '600' },
@@ -232,7 +239,7 @@ const styles = {
   timeline: { marginTop: '32px' },
   historyScroll: { display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' },
   timelineItem: (type) => ({
-    display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', borderRadius: '16px',
+    display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '16px', borderRadius: '18px',
     backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)'
   }),
   dot: (type) => ({
@@ -247,7 +254,7 @@ const styles = {
     fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '8px', boxShadow: '0 8px 20px rgba(0,0,0,0.3)'
   },
   warningBox: {
-    padding: '20px', borderRadius: '20px', backgroundColor: 'rgba(245, 158, 11, 0.05)',
+    padding: '20px', borderRadius: '24px', backgroundColor: 'rgba(245, 158, 11, 0.05)',
     border: '1px solid rgba(245, 158, 11, 0.15)', color: 'var(--text-main)', marginBottom: '24px'
   }
 };

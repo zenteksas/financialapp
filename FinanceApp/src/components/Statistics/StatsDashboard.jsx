@@ -13,19 +13,37 @@ const formatDate = (dateStr) => {
 const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountId, accounts, currency, userProfile, onEditGoals, onEditTransaction }) => {
   const [type, setType] = useState('expense');
   const [period, setPeriod] = useState('semana');
+  const [viewDate, setViewDate] = useState(new Date());
   const [rangeLabel, setRangeLabel] = useState('');
   const [customRange, setCustomRange] = useState({ start: '', end: '' });
-  const [isPickingRange, setIsPickingRange] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
   const [series, setSeries] = useState([]);
   const [chartOptions, setChartOptions] = useState({});
   const [categoryBreakdown, setCategoryBreakdown] = useState([]);
-  const [isActivityExpanded, setIsActivityExpanded] = useState(false);
   const [expandedCategoryId, setExpandedCategoryId] = useState(null);
   const [currentPeriodFilteredTxs, setCurrentPeriodFilteredTxs] = useState([]);
 
   useEffect(() => {
     processData();
-  }, [transactions, categories, type, period, selectedAccountId, customRange]);
+  }, [transactions, categories, type, period, selectedAccountId, customRange, viewDate]);
+
+  const handlePrevPeriod = () => {
+    const d = new Date(viewDate);
+    if (period === 'día') d.setDate(d.getDate() - 1);
+    else if (period === 'semana') d.setDate(d.getDate() - 7);
+    else if (period === 'mes') d.setMonth(d.getMonth() - 1);
+    else if (period === 'año') d.setFullYear(d.getFullYear() - 1);
+    setViewDate(d);
+  };
+
+  const handleNextPeriod = () => {
+    const d = new Date(viewDate);
+    if (period === 'día') d.setDate(d.getDate() + 1);
+    else if (period === 'semana') d.setDate(d.getDate() + 7);
+    else if (period === 'mes') d.setMonth(d.getMonth() + 1);
+    else if (period === 'año') d.setFullYear(d.getFullYear() + 1);
+    setViewDate(d);
+  };
 
   const processData = () => {
     // Filter by account
@@ -42,19 +60,22 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
     const periodFiltered = filteredTxs.filter(tx => {
       const txDate = tx.date ? new Date(tx.date + 'T12:00:00') : new Date(parseInt(tx.id));
       if (period === 'día') {
-        return txDate.toDateString() === now.toDateString();
+        return txDate.toDateString() === viewDate.toDateString();
       }
       if (period === 'semana') {
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
+        const startOfWeek = new Date(viewDate);
+        startOfWeek.setDate(viewDate.getDate() - (viewDate.getDay() === 0 ? 6 : viewDate.getDay() - 1)); // Mon start
         startOfWeek.setHours(0,0,0,0);
-        return txDate >= startOfWeek;
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23,59,59,999);
+        return txDate >= startOfWeek && txDate <= endOfWeek;
       }
       if (period === 'mes') {
-        return txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+        return txDate.getMonth() === viewDate.getMonth() && txDate.getFullYear() === viewDate.getFullYear();
       }
       if (period === 'año') {
-        return txDate.getFullYear() === now.getFullYear();
+        return txDate.getFullYear() === viewDate.getFullYear();
       }
       if (period === 'período' && customRange.start && customRange.end) {
         const start = new Date(customRange.start);
@@ -66,10 +87,32 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
     });
 
     // Update range label
-    if (period === 'día') setRangeLabel(now.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }));
-    else if (period === 'semana') setRangeLabel('Esta semana');
-    else if (period === 'mes') setRangeLabel(now.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }));
-    else if (period === 'año') setRangeLabel(now.getFullYear().toString());
+    if (period === 'día') {
+      const today = new Date();
+      if (viewDate.toDateString() === today.toDateString()) {
+        setRangeLabel('Hoy');
+      } else {
+        setRangeLabel(viewDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }));
+      }
+    }
+    else if (period === 'semana') {
+      const startOfWeek = new Date(viewDate);
+      startOfWeek.setDate(viewDate.getDate() - (viewDate.getDay() === 0 ? 6 : viewDate.getDay() - 1));
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      
+      const today = new Date();
+      const sToday = new Date(today);
+      sToday.setDate(today.getDate() - (today.getDay() === 0 ? 6 : today.getDay() - 1));
+      
+      if (startOfWeek.toDateString() === sToday.toDateString()) {
+        setRangeLabel('Esta semana');
+      } else {
+        setRangeLabel(`${startOfWeek.getDate()} ${startOfWeek.toLocaleDateString('es-ES', { month: 'short' })} – ${endOfWeek.getDate()} ${endOfWeek.toLocaleDateString('es-ES', { month: 'short' })}`);
+      }
+    }
+    else if (period === 'mes') setRangeLabel(viewDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }));
+    else if (period === 'año') setRangeLabel(viewDate.getFullYear().toString());
     else if (period === 'período' && customRange.start) setRangeLabel(`${customRange.start} – ${customRange.end}`);
     else setRangeLabel('Todo el tiempo');
     
@@ -203,6 +246,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
   return (
     <div className="animate-fade" style={{ width: '100%' }}>
 
+      {/* 1, 2: Toggles GASTOS/INGRESOS */}
       <div style={styles.topNav}>
         <div style={styles.tabs}>
           <button 
@@ -220,14 +264,18 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
         </div>
       </div>
 
+      {/* 3: Periods Filter */}
       <div style={styles.periods}>
         {['Día', 'Semana', 'Mes', 'Año', 'Período'].map(p => (
           <button 
             key={p} 
             style={styles.periodBtn(period === p.toLowerCase())}
             onClick={() => {
+              const prev = period;
               setPeriod(p.toLowerCase());
-              setIsPickingRange(p === 'Período');
+              if (p === 'Período') setIsPickerOpen(true);
+              else if (prev === p.toLowerCase()) setIsPickerOpen(true); // If already selected, open picker
+              else setViewDate(new Date()); // Reset if changing period
             }}
           >
             {p}
@@ -235,36 +283,51 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
         ))}
       </div>
 
-      {isPickingRange && (
-        <div className="glass" style={{ padding: '16px', marginBottom: '16px', borderRadius: '16px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', justifyContent: 'center' }}>
-          <input type="date" value={customRange.start} onChange={e => setCustomRange(prev => ({ ...prev, start: e.target.value }))} style={styles.dateInput} />
-          <span style={{ color: 'var(--text-muted)' }}>–</span>
-          <input type="date" value={customRange.end} onChange={e => setCustomRange(prev => ({ ...prev, end: e.target.value }))} style={styles.dateInput} />
-          <button className="glass" style={{ padding: '6px 12px', borderRadius: '8px', color: 'var(--secondary)', border: '1px solid var(--secondary)' }} onClick={() => setIsPickingRange(false)}>OK</button>
-        </div>
-      )}
+      {/* 4: Date Info with Navigation */}
+      <div style={styles.rangeNav}>
+        <button onClick={handlePrevPeriod} style={styles.navBtn}>
+          <ChevronLeft size={20} />
+        </button>
+        <span 
+          style={styles.rangeLabel}
+          onClick={() => setIsPickerOpen(true)}
+        >
+          {rangeLabel}
+        </span>
+        <button onClick={handleNextPeriod} style={styles.navBtn}>
+          <ChevronRight size={20} />
+        </button>
+      </div>
 
-      <div style={styles.chartAreaWrapper}>
-        <div style={styles.rangeNav}>
-          <ChevronLeft size={20} style={{ opacity: 0.5 }} />
-          <span>{rangeLabel}</span>
-          <ChevronRight size={20} style={{ opacity: 0.5 }} />
-        </div>
-
+      {/* 5: Chart Area (Independent Container) */}
+      <div style={styles.chartWrapper}>
         <div style={styles.chartContainer}>
           <div style={styles.chartGlow} />
           {series.length > 0 ? (
-            <Chart options={chartOptions} series={series} type="donut" height="100%" />
+            <Chart options={chartOptions} series={series} type="donut" height="260" />
           ) : (
             <div style={styles.noData}>No hay datos en este periodo</div>
           )}
         </div>
 
+        {/* 6: Add Button */}
         <button onClick={() => onAddClick(type)} style={styles.addBtnFloating}>
           <Plus size={20} />
           <span>Nuevo {type === 'expense' ? 'Gasto' : 'Ingreso'}</span>
         </button>
       </div>
+
+      {/* Advanced Picker Modal */}
+      {isPickerOpen && (
+        <AdvancedPicker 
+          mode={period}
+          currentDate={viewDate}
+          customRange={customRange}
+          onSelect={(date) => { setViewDate(date); setIsPickerOpen(false); }}
+          onSelectRange={(start, end) => { setCustomRange({ start, end }); setPeriod('período'); setIsPickerOpen(false); }}
+          onClose={() => setIsPickerOpen(false)}
+        />
+      )}
 
       <div style={{ marginTop: '24px' }}>
         <div style={styles.categoryList}>
@@ -280,7 +343,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
                   onClick={() => setExpandedCategoryId(isExpanded ? null : cat.id)}
                 >
                   <div style={styles.catIcon(cat.color)}>
-                    <Icon size={20} />
+                     <Icon size={20} />
                   </div>
                   <div style={styles.catInfo}>
                     <span style={styles.catName}>{cat.name}</span>
@@ -324,49 +387,223 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
   );
 };
 
+const AdvancedPicker = ({ mode, currentDate, onSelect, onSelectRange, onClose, customRange }) => {
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth());
+  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
+
+  const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  
+  const handleMonthYearSelect = (m, y) => {
+    const d = new Date(y, m, 1);
+    onSelect(d);
+  };
+
+  const getWeeksOfMonth = (m, y) => {
+    const weeks = [];
+    let d = new Date(y, m, 1);
+    // Adjust to first Monday
+    while (d.getDay() !== 1) {
+      d.setDate(d.getDate() - 1);
+    }
+    
+    for (let i = 0; i < 6; i++) {
+      const start = new Date(d);
+      const end = new Date(d);
+      end.setDate(d.getDate() + 6);
+      
+      // If the entire week is in the next month, stop
+      if (i > 0 && start.getMonth() !== (m % 12) && start.getMonth() !== ((m + 11) % 12)) {
+         // This logic is a bit tricky, let's just make sure we capture weeks that intersect the month
+      }
+
+      weeks.push({ start, end });
+      d.setDate(d.getDate() + 7);
+
+      // Stop if we've passed the month and the next week is entirely in next month
+      if (d.getMonth() !== m && d.getDate() > 7) break;
+    }
+    return weeks;
+  };
+
+  return (
+    <div style={styles.pickerOverlay} onClick={onClose}>
+      <div className="glass" style={styles.pickerModal} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ margin: 0, fontSize: '1.2rem' }}>
+            {mode === 'día' ? 'Seleccione el día' : mode === 'semana' ? 'Seleccione la semana' : mode === 'mes' ? 'Seleccione el mes' : mode === 'año' ? 'Seleccione el año' : 'Seleccione periodo'}
+          </h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)' }}>Cerrar</button>
+        </div>
+
+        {mode === 'día' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <input 
+              type="date" 
+              defaultValue={currentDate.toISOString().split('T')[0]} 
+              onChange={(e) => onSelect(new Date(e.target.value + 'T12:00:00'))}
+              style={styles.pickerInput}
+            />
+          </div>
+        )}
+
+        {mode === 'mes' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            {months.map((m, i) => (
+              <button 
+                key={m} 
+                onClick={() => handleMonthYearSelect(i, selectedYear)}
+                style={styles.pickerChip(selectedMonth === i)}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {mode === 'año' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            {[2024, 2025, 2026].map(y => (
+              <button 
+                key={y} 
+                onClick={() => handleMonthYearSelect(selectedMonth, y)}
+                style={styles.pickerChip(selectedYear === y)}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {mode === 'semana' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <button onClick={() => setSelectedYear(selectedYear - 1)} style={styles.navBtn}><ChevronLeft size={16}/></button>
+              <span style={{ fontWeight: '700' }}>{selectedYear}</span>
+              <button onClick={() => setSelectedYear(selectedYear + 1)} style={styles.navBtn}><ChevronRight size={16}/></button>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '12px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+               {months.map((m, i) => (
+                 <button 
+                  key={m} 
+                  onClick={() => setSelectedMonth(i)}
+                  style={{ 
+                    padding: '6px 12px', borderRadius: '12px', border: 'none',
+                    backgroundColor: selectedMonth === i ? 'rgba(74, 222, 128, 0.1)' : 'transparent',
+                    color: selectedMonth === i ? 'var(--secondary)' : 'var(--text-muted)',
+                    fontWeight: selectedMonth === i ? '700' : '400',
+                    whiteSpace: 'nowrap'
+                  }}
+                 >
+                   {m}
+                 </button>
+               ))}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
+               {getWeeksOfMonth(selectedMonth, selectedYear).map((w, idx) => {
+                 const isSelected = currentDate >= w.start && currentDate <= w.end;
+                 return (
+                   <button 
+                    key={idx} 
+                    onClick={() => onSelect(w.start)}
+                    style={{ 
+                      padding: '12px 16px', borderRadius: '16px', border: '1px solid var(--glass-border)',
+                      backgroundColor: isSelected ? 'var(--secondary)' : 'rgba(255,255,255,0.03)',
+                      color: isSelected ? '#000' : 'var(--text-main)',
+                      fontWeight: '700', minWidth: '80px'
+                    }}
+                   >
+                     {w.start.getDate()}-{w.end.getDate()}
+                   </button>
+                 );
+               })}
+            </div>
+          </div>
+        )}
+
+        {mode === 'período' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <input type="date" value={customRange.start} onChange={e => onSelectRange(e.target.value, customRange.end)} style={styles.pickerInput} />
+              <span>–</span>
+              <input type="date" value={customRange.end} onChange={e => onSelectRange(customRange.start, e.target.value)} style={styles.pickerInput} />
+            </div>
+            <button 
+              className="glass" 
+              style={{ padding: '12px', borderRadius: '14px', backgroundColor: 'var(--primary)', color: 'white', fontWeight: '700' }}
+              onClick={onClose}
+            >
+              Aplicar Periodo
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const styles = {
   topNav: { marginBottom: '16px' },
-  tabs: { display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)' },
+  tabs: { 
+    display: 'flex', 
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: '16px',
+    padding: '4px',
+    gap: '4px',
+    border: '1px solid var(--glass-border)',
+  },
   tab: (active) => ({
-    flex: 1, padding: '12px', border: 'none', background: 'none',
-    color: active ? 'var(--text-heading)' : 'var(--text-muted)',
-    fontSize: '0.9rem', fontWeight: '700', cursor: 'pointer',
-    borderBottom: active ? '3px solid var(--secondary)' : '3px solid transparent',
-    transition: 'all 0.2s'
+    flex: 1,
+    padding: '10px',
+    borderRadius: '12px',
+    backgroundColor: active ? 'rgba(74, 222, 128, 0.1)' : 'transparent',
+    color: active ? 'var(--secondary)' : 'var(--text-muted)',
+    fontSize: '0.85rem',
+    fontWeight: '700',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    border: 'none',
   }),
   periods: { 
-    display: 'grid', 
-    gridTemplateColumns: 'repeat(5, 1fr)',
+    display: 'flex', 
+    justifyContent: 'space-between',
+    padding: '4px',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderRadius: '14px',
     marginBottom: '16px',
-    padding: '0 8px',
-    width: '100%',
-    boxSizing: 'border-box'
+    gap: '4px'
   },
   periodBtn: (active) => ({
-    padding: '6px 0', 
-    background: 'none', 
+    flex: 1,
+    padding: '8px 4px', 
+    borderRadius: '10px',
+    background: active ? 'rgba(74, 222, 128, 0.1)' : 'transparent', 
     border: 'none',
     color: active ? 'var(--secondary)' : 'var(--text-muted)',
-    fontSize: '0.85rem', 
-    fontWeight: '400', 
+    fontSize: '0.7rem', 
+    fontWeight: '700', 
     cursor: 'pointer',
-    borderBottom: active ? '2px solid var(--secondary)' : '2px solid transparent',
-    flex: 1,
-    textAlign: 'center'
+    transition: 'all 0.2s'
   }),
-  chartAreaWrapper: {
-    padding: '20px 0',
-    position: 'relative',
-    height: '380px',
+  rangeNav: {
+    display: 'flex', justifyContent: 'center', alignItems: 'center',
+    gap: '12px', marginBottom: '20px', color: 'var(--text-main)'
+  },
+  navBtn: {
+    background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--text-muted)',
+    padding: '6px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer'
+  },
+  rangeLabel: {
+    fontSize: '0.9rem', fontWeight: '700', color: 'var(--primary)',
+    cursor: 'pointer', padding: '6px 16px', backgroundColor: 'rgba(74, 222, 128, 0.05)',
+    borderRadius: '14px', minWidth: '140px', textAlign: 'center'
+  },
+  chartWrapper: {
+    padding: '10px 0',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    overflow: 'visible',
-    boxSizing: 'border-box'
-  },
-  rangeNav: {
-    display: 'flex', justifyContent: 'center', alignItems: 'center',
-    gap: '24px', marginBottom: '16px', fontSize: '0.9rem', color: 'var(--text-main)'
+    minHeight: '340px'
   },
   chartContainer: { 
     width: '100%',
@@ -374,82 +611,65 @@ const styles = {
     display: 'flex', 
     alignItems: 'center', 
     justifyContent: 'center',
-    position: 'relative',
-    flex: 'none'
+    position: 'relative'
   },
   chartGlow: {
     position: 'absolute',
-    width: '160px',
-    height: '160px',
+    width: '140px',
+    height: '140px',
     borderRadius: '50%',
     background: 'radial-gradient(circle, var(--primary-glow) 0%, transparent 70%)',
     zIndex: 0,
-    opacity: 0.5
-  },
-  chartFooter: {
-    marginTop: '16px',
-    textAlign: 'center'
-  },
-  footerLabel: {
-    fontSize: '0.7rem',
-    color: 'var(--text-muted)',
-    fontWeight: '600',
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase'
-  },
-  footerValue: {
-    fontSize: '1.8rem',
-    fontWeight: '800',
-    color: 'var(--text-heading)',
-    margin: '4px 0'
+    opacity: 0.3
   },
   noData: { color: 'var(--text-muted)', fontSize: '0.9rem' },
   addBtnFloating: {
-    marginTop: '12px',
+    marginTop: '20px',
     padding: '12px 24px', borderRadius: '24px', 
     backgroundColor: '#fbbf24', border: 'none',
     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#000',
     boxShadow: '0 8px 24px rgba(251, 191, 36, 0.3)', cursor: 'pointer',
-    fontSize: '0.9rem', fontWeight: '800', transition: 'all 0.2s',
-    zIndex: 2
+    fontSize: '0.85rem', fontWeight: '800', transition: 'all 0.2s'
   },
-  categoryList: { display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' },
+  categoryList: { display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '16px' },
   catItem: {
     display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px',
-    backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '16px'
+    backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '18px'
   },
   catIcon: (color) => ({
-    width: '36px', height: '36px', borderRadius: '50%',
-    backgroundColor: color, color: 'white',
-    display: 'flex', alignItems: 'center', justifyContent: 'center'
+    width: '36px', height: '36px', borderRadius: '12px',
+    backgroundColor: `${color}20`, color: color,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    border: `1px solid ${color}40`
   }),
   catInfo: { flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  catName: { color: 'var(--text-main)', fontSize: '0.95rem', fontWeight: '400' },
+  catName: { color: 'var(--text-main)', fontSize: '0.9rem', fontWeight: '500' },
   catValues: { display: 'flex', gap: '8px', alignItems: 'center' },
-  catPercent: { color: 'var(--text-muted)', fontSize: '0.85rem' },
-  catAmount: { color: 'var(--text-heading)', fontWeight: '600', fontSize: '1rem' },
+  catPercent: { color: 'var(--text-muted)', fontSize: '0.8rem' },
+  catAmount: { color: 'var(--text-heading)', fontWeight: '800', fontSize: '0.95rem' },
   activityItem: {
-    padding: '16px',
-    borderRadius: '20px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px'
+    padding: '16px', borderRadius: '18px', display: 'flex', alignItems: 'center', gap: '16px'
   },
-  activityIcon: (color) => ({
-    width: '32px',
-    height: '32px',
-    borderRadius: '10px',
-    backgroundColor: `${color}20`,
-    color: color,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  }),
-  dateInput: {
-    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-    color: 'var(--text-main)', padding: '6px 10px', borderRadius: '8px',
-    outline: 'none', fontSize: '0.85rem'
-  }
+  pickerOverlay: {
+    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'flex-end',
+    zIndex: 5000, backdropFilter: 'blur(8px)'
+  },
+  pickerModal: {
+    width: '100%', borderTopLeftRadius: '32px', borderTopRightRadius: '32px',
+    padding: '32px 24px calc(32px + var(--safe-area-bottom))',
+    boxShadow: '0 -10px 40px rgba(0,0,0,0.5)', maxHeight: '90vh', overflowY: 'auto'
+  },
+  pickerInput: {
+    width: '100%', padding: '14px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)',
+    border: '1px solid var(--glass-border)', color: 'var(--text-main)', outline: 'none'
+  },
+  pickerChip: (active) => ({
+    padding: '12px', borderRadius: '14px', border: '1px solid var(--glass-border)',
+    backgroundColor: active ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255,255,255,0.03)',
+    color: active ? 'var(--secondary)' : 'var(--text-muted)',
+    fontWeight: active ? '700' : '400', cursor: 'pointer'
+  })
 };
 
 export default StatsDashboard;

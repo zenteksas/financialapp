@@ -1,5 +1,5 @@
 /**
- * storage.js - IndexedDB abstraction for FinanceApp
+ * storage.js - IndexedDB abstraction for ZenFinance
  * Persistent and asynchronous data layer.
  */
 

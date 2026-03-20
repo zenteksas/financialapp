@@ -15,6 +15,9 @@ import ProfileModal from './components/Settings/ProfileModal';
 import PaymentModal from './components/Transactions/PaymentModal';
 import BackupRestoreModule from './components/Settings/BackupRestoreModule';
 import ExportModule from './components/Settings/ExportModule';
+import ToolsModule from './components/Tools/ToolsModule';
+import { motion, AnimatePresence } from 'framer-motion';
+
 import { db } from './utils/db';
 import { Menu, ChevronDown, Bell, User, Edit2, Smile, Heart, Zap, Coffee, Gamepad, Rocket, Star, Trash2 } from 'lucide-react';
 
@@ -120,6 +123,12 @@ function App() {
     
     initApp();
     
+    // Fade out splash screen
+    const timer = setTimeout(() => {
+      const splash = document.getElementById('splash-screen');
+      if (splash) splash.classList.add('fade-out');
+    }, 1500);
+
     // Listen for cross-component data updates
     const handleUpdate = () => loadData();
     window.addEventListener('dataUpdated', handleUpdate);
@@ -339,7 +348,7 @@ function App() {
              </div>
              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                {totals.accountBalances.map(acc => (
-                 <div key={acc.id} className="glass" style={{ padding: '20px', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => handleAccountClick(acc)}>
+                 <div key={acc.id} className="glass" style={{ padding: '20px', borderRadius: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => handleAccountClick(acc)}>
                     <div>
                       <p style={{ fontWeight: '600' }}>{acc.name}</p>
                       <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{acc.includeInTotal ? 'Sumado al balance' : 'Oculto'}</p>
@@ -365,109 +374,118 @@ function App() {
             }}
           />
         );
-      case 'debts': 
-        return <DebtsModule debts={debts} totals={totals} onUpdate={loadData} currency={currency} />;
-      case 'backup':
-        return <BackupRestoreModule />;
-      case 'export':
-        return <ExportModule currency={currency} />;
+      case 'tools': 
+        return (
+          <ToolsModule 
+            debts={debts} 
+            totals={totals} 
+            onUpdate={loadData} 
+            currency={currency} 
+          />
+        );
       case 'settings':
+        const SettingsItem = ({ icon: Icon, label, onClick, color = 'var(--text-main)', sublabel }) => (
+          <button 
+            onClick={onClick}
+            className="glass-hover"
+            style={{
+              width: '100%', padding: '16px', display: 'flex', alignItems: 'center', gap: '16px',
+              border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left',
+              borderBottom: '1px solid var(--glass-border)', transition: 'background 0.2s'
+            }}
+          >
+            <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Icon size={20} color={color === 'var(--danger)' ? color : 'var(--primary)'} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: '600', fontSize: '1rem', color }}>{label}</p>
+              {sublabel && <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{sublabel}</p>}
+            </div>
+            <ChevronDown size={16} style={{ transform: 'rotate(-90deg)', opacity: 0.3 }} />
+          </button>
+        );
+
         return (
           <div className="animate-fade">
             <h2 style={{ marginBottom: '24px' }}>Ajustes</h2>
-            <div className="glass" style={{ padding: '24px', borderRadius: '24px', marginBottom: '24px' }}>
-              <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>Mi Perfil</h4>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
-                <div style={{ width: '60px', height: '60px', borderRadius: '20px', backgroundColor: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {(() => {
-                    const AvatarIcon = AVATAR_ICONS[userProfile.avatar];
-                    if (AvatarIcon) return <AvatarIcon color="var(--primary)" size={30} />;
-                    return (
-                      <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '1.25rem' }}>
-                        {userProfile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                      </span>
-                    );
-                  })()}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: '600', fontSize: '1.1rem' }}>{userProfile.name}</p>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Toca el lápiz para editar tu información</p>
-                </div>
-                <button 
-                  onClick={() => setIsProfileModalOpen(true)}
-                  style={{ background: 'none', color: 'var(--primary)', cursor: 'pointer' }}
-                >
-                  <Edit2 size={20} />
-                </button>
+            
+            {/* --- Profile Section --- */}
+            <div className="glass" style={{ padding: '20px', borderRadius: '24px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ width: '52px', height: '52px', borderRadius: '16px', backgroundColor: 'var(--primary-light)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {(() => {
+                  const AvatarIcon = AVATAR_ICONS[userProfile.avatar];
+                  if (AvatarIcon) return <AvatarIcon color="var(--primary)" size={26} />;
+                  return (
+                    <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '1.1rem' }}>
+                      {userProfile.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </span>
+                  );
+                })()}
               </div>
-            </div>
-
-            <div className="glass" style={{ padding: '24px', borderRadius: '24px' }}>
-              <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>Apariencia</h4>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <button 
-                  className="glass"
-                  style={{ 
-                    flex: 1, padding: '16px', borderRadius: '16px', 
-                    border: theme === 'light' ? '2px solid var(--secondary)' : '1px solid rgba(255,255,255,0.05)',
-                    fontWeight: '600', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                    backgroundColor: theme === 'light' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255, 255, 255, 0.03)'
-                  }}
-                  onClick={() => {
-                    db.saveTheme('light');
-                    setTheme('light');
-                  }}
-                >
-                  <span style={{ fontSize: '1.5rem' }}>☀️</span>
-                  <span>Claro</span>
-                </button>
-                <button 
-                  className="glass"
-                  style={{ 
-                    flex: 1, padding: '16px', borderRadius: '16px', 
-                    border: theme === 'dark' ? '2px solid var(--secondary)' : '1px solid rgba(255,255,255,0.05)',
-                    fontWeight: '600', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                    backgroundColor: theme === 'dark' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255, 255, 255, 0.03)'
-                  }}
-                  onClick={() => {
-                    db.saveTheme('dark');
-                    setTheme('dark');
-                  }}
-                >
-                  <span style={{ fontSize: '1.5rem' }}>🌙</span>
-                  <span>Oscuro</span>
-                </button>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: '600', fontSize: '1.1rem' }}>{userProfile.name || 'Usuario'}</p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Perfil Personal</p>
               </div>
-            </div>
-
-            <div style={{ marginTop: '32px', textAlign: 'center' }}>
               <button 
-                className="glass"
-                style={{ 
-                  padding: '16px 32px', 
-                  borderRadius: '16px', 
-                  backgroundColor: 'rgba(239, 68, 68, 0.1)', 
-                  color: 'var(--danger)', 
-                  border: '1px solid rgba(239, 68, 68, 0.2)',
-                  fontWeight: '700',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  margin: '0 auto'
-                }}
+                onClick={() => setIsProfileModalOpen(true)}
+                style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--primary)', padding: '10px', borderRadius: '12px', cursor: 'pointer' }}
+              >
+                <Edit2 size={18} />
+              </button>
+            </div>
+
+            {/* --- Theme Section --- */}
+            <div className="glass" style={{ padding: '16px 20px', borderRadius: '24px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontWeight: '600' }}>Apariencia</span>
+              <div style={{ display: 'flex', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '4px' }}>
+                <button 
+                  style={{ 
+                    padding: '8px 16px', borderRadius: '10px', border: 'none', 
+                    backgroundColor: theme === 'light' ? 'var(--surface-color)' : 'transparent',
+                    color: theme === 'light' ? 'var(--primary)' : 'var(--text-muted)',
+                    fontWeight: theme === 'light' ? '700' : '400', cursor: 'pointer'
+                  }}
+                  onClick={() => { db.saveTheme('light'); setTheme('light'); }}
+                >
+                  ☀️ Claro
+                </button>
+                <button 
+                  style={{ 
+                    padding: '8px 16px', borderRadius: '10px', border: 'none', 
+                    backgroundColor: theme === 'dark' ? 'var(--surface-color)' : 'transparent',
+                    color: theme === 'dark' ? 'var(--secondary)' : 'var(--text-muted)',
+                    fontWeight: theme === 'dark' ? '700' : '400', cursor: 'pointer'
+                  }}
+                  onClick={() => { db.saveTheme('dark'); setTheme('dark'); }}
+                >
+                  🌙 Oscuro
+                </button>
+              </div>
+            </div>
+
+            {/* --- Unified Actions Group --- */}
+            <div className="glass" style={{ borderRadius: '24px', overflow: 'hidden', marginBottom: '32px' }}>
+              <SettingsItem 
+                icon={Star} 
+                label="Políticas de Privacidad" 
+                sublabel="Cómo protegemos tus datos"
+                onClick={() => window.open('https://zentek-finance.web.app/privacy', '_blank')} 
+              />
+              <div style={{ padding: '0 16px' }}><BackupRestoreModule compact /></div>
+              <div style={{ height: '1px', background: 'var(--glass-border)', margin: '0 16px' }} />
+              <div style={{ padding: '0 16px' }}><ExportModule currency={currency} compact /></div>
+              <SettingsItem 
+                icon={Trash2} 
+                label="Reiniciar Aplicación" 
+                sublabel="Borra todos los datos permanentemente"
+                color="var(--danger)"
                 onClick={async () => {
                   if (window.confirm('¿Estás seguro de que quieres reiniciar la aplicación? Se borrarán TODOS tus datos permanentemente.')) {
                     await db.reset();
                     window.location.reload();
                   }
-                }}
-              >
-                <Trash2 size={20} />
-                Reiniciar Aplicación
-              </button>
-              <p style={{ marginTop: '12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Esta acción borrará transacciones, cuentas y configuraciones.
-              </p>
+                }} 
+              />
             </div>
           </div>
         );
@@ -608,7 +626,17 @@ function App() {
       </div>
 
       <div style={styles.pageContainer}>
-        {renderView()}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            {renderView()}
+          </motion.div>
+        </AnimatePresence>
       </div>
       
       <TransactionModal 

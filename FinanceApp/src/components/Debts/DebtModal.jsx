@@ -48,7 +48,10 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency })
   };
 
   const handleAmountChange = (e, field) => {
-    const rawValue = e.target.value.replace(/\D/g, '');
+    let rawValue = e.target.value.replace(/\D/g, '');
+    if (rawValue.length > 1 && rawValue.startsWith('0')) {
+      rawValue = rawValue.replace(/^0+/, '');
+    }
     setFormData(prev => ({ ...prev, [field]: rawValue }));
   };
 
@@ -216,24 +219,21 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.85)',
+    backgroundColor: 'rgba(0,0,0,0.8)',
     display: 'flex',
-    flexDirection: 'column',
-    paddingTop: '60px',
+    alignItems: 'flex-end',
     zIndex: 2000,
-    backdropFilter: 'blur(4px)',
+    backdropFilter: 'blur(8px)',
   },
   modal: {
-    margin: 'auto 16px 24px 16px',
-    width: 'calc(100% - 32px)',
-    maxWidth: '500px',
-    borderRadius: '28px',
-    padding: '24px',
-    boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+    width: '100%',
+    borderTopLeftRadius: '32px',
+    borderTopRightRadius: '32px',
+    padding: '32px 24px calc(32px + var(--safe-area-bottom))',
+    boxShadow: '0 -10px 40px rgba(0,0,0,0.5)',
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
-    border: '1px solid var(--glass-border)',
   },
   header: {
     display: 'flex',

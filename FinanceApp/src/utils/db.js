@@ -334,6 +334,29 @@ export const db ={
     });
   },
 
+  // Financial Planner Prefs
+  getPlannerPrefs: async () => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS);
+    return {
+      strategyId: prefs.plannerStrategyId || '503020',
+      income: prefs.plannerIncome || 0,
+      customPercentages: prefs.plannerCustomPercentages || null,
+      isVariableIncome: prefs.plannerIsVariableIncome || false,
+      incomeHistory: prefs.plannerIncomeHistory || []
+    };
+  },
+  savePlannerPrefs: async (data) => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS);
+    await db._save(DB_KEYS.USER_PREFS, { 
+      ...prefs, 
+      plannerStrategyId: data.strategyId,
+      plannerIncome: data.income,
+      plannerCustomPercentages: data.customPercentages,
+      plannerIsVariableIncome: data.isVariableIncome,
+      plannerIncomeHistory: data.incomeHistory
+    });
+  },
+
   // Currency
   getCurrency: async () => {
     return (await storage.get(DB_KEYS.CURRENCY)) || 'COP';

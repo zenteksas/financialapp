@@ -205,20 +205,22 @@ const styles = {
   },
   tabBar: {
     display: 'flex',
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
     borderRadius: '16px',
     padding: '4px',
     gap: '4px',
+    border: '1px solid var(--glass-border)',
   },
   tab: (active) => ({
     flex: 1,
     padding: '10px',
     borderRadius: '12px',
-    backgroundColor: active ? 'var(--surface-color)' : 'transparent',
-    color: active ? 'var(--text-main)' : 'var(--text-muted)',
+    backgroundColor: active ? 'rgba(74, 222, 128, 0.1)' : 'transparent',
+    color: active ? 'var(--secondary)' : 'var(--text-muted)',
     fontSize: '0.9rem',
-    fontWeight: active ? '600' : '400',
-    border: active ? '1px solid var(--glass-border)' : '1px solid transparent',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
   }),
   summaryCard: {
     display: 'flex',
@@ -229,7 +231,7 @@ const styles = {
   },
   summaryItem: { flex: 1 },
   summaryLabel: { display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '4px' },
-  summaryVal: { fontSize: '1.4rem', fontWeight: '700' },
+  summaryVal: { fontSize: '1.4rem', fontWeight: '800' },
   addBtn: {
     width: '100%',
     padding: '16px',
@@ -245,9 +247,9 @@ const styles = {
     cursor: 'pointer'
   },
   debtList: { display: 'flex', flexDirection: 'column', gap: '16px' },
-  debtCard: { padding: '20px', borderRadius: '20px', cursor: 'pointer' },
+  debtCard: { padding: '16px', borderRadius: '18px', cursor: 'pointer' },
   cardLabel: { fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '2px' },
-  cardVal: { fontWeight: '700', fontSize: '1.1rem' },
+  cardVal: { fontWeight: '800', fontSize: '1.1rem' },
   empty: { padding: '40px', borderRadius: '24px', textAlign: 'center' },
 };
 

@@ -101,10 +101,16 @@ const ProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
 const modalStyles = {
   overlay: {
     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    zIndex: 3000, padding: '20px', backdropFilter: 'blur(8px)'
+    backgroundColor: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'flex-end',
+    zIndex: 3000, backdropFilter: 'blur(8px)'
   },
-  modal: { width: '100%', maxWidth: '380px', padding: '28px', borderRadius: '28px', position: 'relative' },
+  modal: { 
+    width: '100%', 
+    borderTopLeftRadius: '32px', 
+    borderTopRightRadius: '32px', 
+    padding: '32px 24px calc(32px + var(--safe-area-bottom))',
+    boxShadow: '0 -10px 40px rgba(0,0,0,0.5)'
+  },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' },
   closeBtn: { background: 'none', color: 'var(--text-muted)', cursor: 'pointer' },
   body: { marginBottom: '28px' },
