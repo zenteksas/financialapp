@@ -74,6 +74,7 @@ function App() {
   const [categories, setCategories] = useState([]);
   const [userProfile, setUserProfile] = useState({ name: '', avatar: '', onboardingComplete: true }); // Default to avoid crash
   const [currency, setCurrency] = useState('COP');
+  const [theme, setTheme] = useState('dark');
   const [payments, setPayments] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -108,6 +109,10 @@ function App() {
   const [editingPayment, setEditingPayment] = useState(null);
 
   useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
     const initApp = async () => {
       await db.init();
       await loadData();
@@ -122,13 +127,14 @@ function App() {
   }, []);
 
   const loadData = async () => {
-    const [txs, dbDebts, accs, cats, profile, curr, pays, newNotes] = await Promise.all([
+    const [txs, dbDebts, accs, cats, profile, curr, dbTheme, pays, newNotes] = await Promise.all([
       db.getTransactions(),
       db.getDebts(),
       db.getAccounts(),
       db.getCategories(),
       db.getProfile(),
       db.getCurrency(),
+      db.getTheme(),
       db.getPayments(),
       db.getActiveNotifications()
     ]);
@@ -139,6 +145,7 @@ function App() {
     setCategories(cats);
     setUserProfile(profile);
     setCurrency(curr);
+    setTheme(dbTheme);
     setPayments(pays);
     setNotifications(newNotes);
     
@@ -195,6 +202,14 @@ function App() {
     setSelectedCategoryId(null);
     await loadData();
   };
+  
+  const handleDeleteTransaction = async (id) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este movimiento?')) {
+      await db.deleteTransaction(id);
+      await loadData();
+      setIsModalOpen(false);
+    }
+  };
 
   const handleEditTransaction = (tx) => {
     setEditingTransaction(tx);
@@ -225,9 +240,11 @@ function App() {
     await loadData();
   };
 
-  const handleOnboardingComplete = async ({ profile, currency, accounts, initialAccount }) => {
+  const handleOnboardingComplete = async ({ profile, currency, accounts, initialAccount, theme }) => {
     await db.saveProfile(profile);
     await db.saveCurrency(currency);
+    await db.saveTheme(theme);
+    setTheme(theme);
     // Support both multiple accounts (new) and single account (legacy)
     const accountList = accounts || (initialAccount ? [initialAccount] : []);
     // Assign unique IDs with offset to avoid Date.now() collisions in fast forEach
@@ -269,7 +286,7 @@ function App() {
           <StatsDashboard 
             transactions={transactions} 
             categories={categories} 
-            onAddClick={() => setIsModalOpen(true)}
+            onAddClick={(type) => { setEditingTransaction({ type }); setIsModalOpen(true); }}
             selectedAccountId={selectedAccountId}
             accounts={accounts}
             currency={currency}
@@ -310,7 +327,16 @@ function App() {
       case 'accounts':
         return (
           <div className="animate-fade">
-             <h2 style={{ marginBottom: '20px' }}>Mis Cuentas</h2>
+             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h2 style={{ margin: 0 }}>Mis Cuentas</h2>
+                <button 
+                  onClick={() => { setEditingTransaction({ type: 'transfer' }); setIsModalOpen(true); }}
+                  className="glass"
+                  style={{ padding: '8px 16px', borderRadius: '12px', color: 'var(--primary)', fontWeight: '700', fontSize: '0.85rem' }}
+                >
+                  ⇄ Transferir
+                </button>
+             </div>
              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                {totals.accountBalances.map(acc => (
                  <div key={acc.id} className="glass" style={{ padding: '20px', borderRadius: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => handleAccountClick(acc)}>
@@ -377,31 +403,40 @@ function App() {
             </div>
 
             <div className="glass" style={{ padding: '24px', borderRadius: '24px' }}>
-              <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>Tipo de Divisa</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {['COP', 'USD', 'EUR'].map(curr => (
-                  <button 
-                    key={curr}
-                    className="glass"
-                    style={{ 
-                      padding: '16px', 
-                      borderRadius: '16px', 
-                      border: currency === curr ? '2px solid var(--secondary)' : '1px solid rgba(255,255,255,0.05)',
-                      textAlign: 'left',
-                      fontWeight: '600',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                    onClick={() => {
-                      db.saveCurrency(curr);
-                      setCurrency(curr);
-                    }}
-                  >
-                    <span>{curr === 'COP' ? 'Peso Colombiano (COP)' : curr === 'USD' ? 'Dólar Estadounidense (USD)' : 'Euro (EUR)'}</span>
-                    {currency === curr && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--secondary)' }} />}
-                  </button>
-                ))}
+              <h4 style={{ marginBottom: '16px', color: 'var(--text-muted)' }}>Apariencia</h4>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  className="glass"
+                  style={{ 
+                    flex: 1, padding: '16px', borderRadius: '16px', 
+                    border: theme === 'light' ? '2px solid var(--secondary)' : '1px solid rgba(255,255,255,0.05)',
+                    fontWeight: '600', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                    backgroundColor: theme === 'light' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255, 255, 255, 0.03)'
+                  }}
+                  onClick={() => {
+                    db.saveTheme('light');
+                    setTheme('light');
+                  }}
+                >
+                  <span style={{ fontSize: '1.5rem' }}>☀️</span>
+                  <span>Claro</span>
+                </button>
+                <button 
+                  className="glass"
+                  style={{ 
+                    flex: 1, padding: '16px', borderRadius: '16px', 
+                    border: theme === 'dark' ? '2px solid var(--secondary)' : '1px solid rgba(255,255,255,0.05)',
+                    fontWeight: '600', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                    backgroundColor: theme === 'dark' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255, 255, 255, 0.03)'
+                  }}
+                  onClick={() => {
+                    db.saveTheme('dark');
+                    setTheme('dark');
+                  }}
+                >
+                  <span style={{ fontSize: '1.5rem' }}>🌙</span>
+                  <span>Oscuro</span>
+                </button>
               </div>
             </div>
 
@@ -580,6 +615,7 @@ function App() {
         isOpen={isModalOpen} 
         onClose={() => { setIsModalOpen(false); setEditingTransaction(null); }}
         onSave={handleSaveTransaction}
+        onDelete={handleDeleteTransaction}
         categories={categories}
         accounts={totals.accountBalances}
         currency={currency}
@@ -675,7 +711,7 @@ function App() {
                 placeholder="Ej: 3000000"
                 style={{
                   width: '100%', padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid var(--glass-border)', color: 'white', outline: 'none', fontSize: '1.1rem'
+                  border: '1px solid var(--glass-border)', color: 'var(--text-main)', outline: 'none', fontSize: '1.1rem'
                 }}
                 autoFocus
               />

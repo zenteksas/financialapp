@@ -17,7 +17,8 @@ const RemindersModule = () => {
     title: '',
     date: new Date().toISOString().split('T')[0],
     time: '12:00',
-    color: '#3b82f6'
+    color: '#3b82f6',
+    recurrence: 'none'
   });
 
   useEffect(() => {
@@ -37,7 +38,8 @@ const RemindersModule = () => {
       title: '',
       date: new Date().toISOString().split('T')[0],
       time: '12:00',
-      color: '#3b82f6'
+      color: '#3b82f6',
+      recurrence: 'none'
     });
     setIsFormOpen(false);
     await loadReminders();
@@ -123,6 +125,21 @@ const RemindersModule = () => {
             </div>
 
             <div style={{ marginBottom: '24px' }}>
+              <label style={styles.label}>REPETIR</label>
+              <select 
+                value={newReminder.recurrence}
+                onChange={e => setNewReminder({...newReminder, recurrence: e.target.value})}
+                style={styles.input}
+              >
+                <option value="none">Ninguna</option>
+                <option value="daily">Diario</option>
+                <option value="weekly">Semanal</option>
+                <option value="monthly">Mensual</option>
+                <option value="yearly">Anual</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
               <label style={styles.label}>COLOR DE ALERTA</label>
               <div style={{ display: 'flex', gap: '10px' }}>
                 {REMINDER_COLORS.map(c => (
@@ -175,6 +192,17 @@ const RemindersModule = () => {
                   <span>{rem.date}</span>
                   <Clock size={14} style={{ marginLeft: '8px' }} />
                   <span>{rem.time || '--:--'}</span>
+                  {rem.recurrence && rem.recurrence !== 'none' && (
+                    <span style={{ 
+                      marginLeft: '8px', padding: '2px 6px', borderRadius: '6px', 
+                      backgroundColor: 'rgba(255,255,255,0.05)', fontSize: '0.7rem',
+                      display: 'flex', alignItems: 'center', gap: '4px'
+                    }}>
+                      🔄 {rem.recurrence === 'daily' ? 'Diario' : 
+                         rem.recurrence === 'weekly' ? 'Semanal' : 
+                         rem.recurrence === 'monthly' ? 'Mensual' : 'Anual'}
+                    </span>
+                  )}
                 </div>
               </div>
               

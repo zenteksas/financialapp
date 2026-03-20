@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Plus, Tag } from 'lucide-react';
+import { X, Check, Plus, Tag, Trash2 } from 'lucide-react';
 
 const ICONS = { Tag }; // Fallback for simple display
 
-const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, currency, onAddCategory, initialCategoryId, initialData }) => {
+const TransactionModal = ({ isOpen, onClose, onSave, onDelete, categories, accounts, currency, onAddCategory, initialCategoryId, initialData }) => {
   const [type, setType] = useState(initialData?.type || 'expense');
   const [amount, setAmount] = useState(initialData?.amount || '');
   const [accountId, setAccountId] = useState(initialData?.accountId || accounts[0]?.id || 'default');
-  const [fromAccountId, setFromAccountId] = useState(initialData?.fromAccountId || accounts[0]?.id || 'default');
-  const [toAccountId, setToAccountId] = useState(initialData?.toAccountId || accounts[1]?.id || accounts[0]?.id || 'default');
+  const [fromAccountId, setFromAccountId] = useState(initialData?.fromAccountId || '');
+  const [toAccountId, setToAccountId] = useState(initialData?.toAccountId || '');
   const [categoryId, setCategoryId] = useState(initialData?.categoryId || initialCategoryId || categories.filter(c => c.type === type)[0]?.id || '');
   const [note, setNote] = useState(initialData?.note || '');
+  const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
+
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-    if (isOpen) {
-      if (initialData) {
+    if (isOpen && !hasInitialized) {
+      if (initialData && initialData.id) {
+        // Mode: EDITING
         setType(initialData.type);
         setAmount(initialData.amount);
         setAccountId(initialData.accountId || accounts[0]?.id || 'default');
@@ -22,15 +26,34 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
         setToAccountId(initialData.toAccountId || accounts[1]?.id || accounts[0]?.id || 'default');
         setCategoryId(initialData.categoryId || '');
         setNote(initialData.note || '');
+      } else if (initialData && initialData.type) {
+        // Mode: NEW but with pre-selected type (Contextual FAB)
+        setType(initialData.type);
+        setAmount('');
+        setAccountId(accounts[0]?.id || 'default');
+        setFromAccountId('');
+        setToAccountId('');
+        setCategoryId(initialCategoryId || categories.filter(c => c.type === initialData.type)[0]?.id || '');
+        setNote('');
+        setDate(new Date().toISOString().split('T')[0]);
       } else {
+        // Mode: NEW default
         setType('expense');
         setAmount('');
         setAccountId(accounts[0]?.id || 'default');
+        setFromAccountId('');
+        setToAccountId('');
         setCategoryId(initialCategoryId || categories.filter(c => c.type === 'expense')[0]?.id || '');
         setNote('');
+        setDate(new Date().toISOString().split('T')[0]);
       }
+      setHasInitialized(true);
     }
-  }, [isOpen, initialData, initialCategoryId, categories, accounts]);
+    
+    if (!isOpen && hasInitialized) {
+      setHasInitialized(false);
+    }
+  }, [isOpen, initialData, initialCategoryId, categories, accounts, hasInitialized]);
 
   // Update default category when type changes (only if not editing)
   useEffect(() => {
@@ -57,6 +80,14 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!amount || parseFloat(amount) <= 0) return;
+    if (type === 'transfer' && (!fromAccountId || !toAccountId)) {
+      alert('Por favor selecciona ambas cuentas para la transferencia.');
+      return;
+    }
+    if (type === 'transfer' && fromAccountId === toAccountId) {
+      alert('La cuenta de origen y destino no pueden ser la misma.');
+      return;
+    }
     
     onSave({
       ...initialData,
@@ -67,7 +98,7 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
       toAccountId: type === 'transfer' ? toAccountId : null,
       categoryId: type === 'transfer' ? null : categoryId,
       note,
-      date: initialData?.date || new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
+      date,
     });
     
     // Reset and close
@@ -80,34 +111,45 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
     <div style={styles.overlay} className="animate-fade">
       <div className="glass" style={styles.modal}>
         <div style={styles.header}>
-          <h3>{initialData ? 'Editar Movimiento' : 'Nuevo Movimiento'}</h3>
+          <h3>
+            {(() => {
+              const isEdit = !!(initialData && initialData.id);
+              const action = isEdit ? 'Editar' : 'Nuevo';
+              if (type === 'expense') return `${action} Gasto`;
+              if (type === 'income') return `${action} Ingreso`;
+              if (type === 'transfer') return `${action} Transferencia`;
+              return `${action} Movimiento`;
+            })()}
+          </h3>
           <button onClick={onClose} style={styles.closeBtn}><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div style={styles.typeSelector}>
-            <button
-              type="button"
-              onClick={() => setType('expense')}
-              style={styles.typeBtn(type === 'expense', 'var(--danger)')}
-            >
-              Gasto
-            </button>
-            <button
-              type="button"
-              onClick={() => setType('income')}
-              style={styles.typeBtn(type === 'income', 'var(--secondary)')}
-            >
-              Ingreso
-            </button>
-            <button
-              type="button"
-              onClick={() => setType('transfer')}
-              style={styles.typeBtn(type === 'transfer', 'var(--primary)')}
-            >
-              Transferir
-            </button>
-          </div>
+          {(!initialData || !initialData.type) && (
+            <div style={styles.typeSelector}>
+              <button
+                type="button"
+                onClick={() => setType('expense')}
+                style={styles.typeBtn(type === 'expense', 'var(--danger)')}
+              >
+                Gasto
+              </button>
+              <button
+                type="button"
+                onClick={() => setType('income')}
+                style={styles.typeBtn(type === 'income', 'var(--secondary)')}
+              >
+                Ingreso
+              </button>
+              <button
+                type="button"
+                onClick={() => setType('transfer')}
+                style={styles.typeBtn(type === 'transfer', 'var(--primary)')}
+              >
+                Transferir
+              </button>
+            </div>
+          )}
 
           <div style={styles.inputGroup}>
             <label style={styles.label}>Monto ({currency})</label>
@@ -132,6 +174,7 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
                   onChange={(e) => setFromAccountId(e.target.value)}
                   style={styles.input}
                 >
+                  <option value="" disabled>Seleccionar cuenta origen</option>
                   {accounts.map(acc => (
                     <option key={acc.id} value={acc.id}>
                       {acc.name} ({acc.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} {currency})
@@ -146,6 +189,7 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
                   onChange={(e) => setToAccountId(e.target.value)}
                   style={styles.input}
                 >
+                  <option value="" disabled>Seleccionar cuenta destino</option>
                   {accounts.map(acc => (
                     <option key={acc.id} value={acc.id}>
                       {acc.name} ({acc.currentBalance?.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} {currency})
@@ -202,6 +246,16 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
           )}
 
           <div style={styles.inputGroup}>
+            <label style={styles.label}>Fecha</label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              style={styles.input}
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
             <label style={styles.label}>Nota (Opcional)</label>
             <input
               type="text"
@@ -216,6 +270,17 @@ const TransactionModal = ({ isOpen, onClose, onSave, categories, accounts, curre
             <Check size={20} style={{ marginRight: '8px' }} />
             Guardar
           </button>
+          
+          {initialData && initialData.id && (
+            <button 
+              type="button" 
+              onClick={() => onDelete(initialData.id)}
+              style={{ ...styles.saveBtn, backgroundColor: 'transparent', color: 'var(--danger)', marginTop: '12px', border: '1px solid rgba(239, 68, 68, 0.2)' }}
+            >
+              <Trash2 size={18} style={{ marginRight: '8px' }} />
+              Eliminar Movimiento
+            </button>
+          )}
         </form>
       </div>
     </div>

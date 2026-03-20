@@ -72,8 +72,15 @@ export class DebtMath {
     }));
 
     // Initial projection validation
+    const excluded = [];
     debts = debts.filter(d => {
       const res = this.projectDebt(d.monto, d.ea, d.cuotaMinima, d.cuotaManejo || 0, d.seguros || 0, 0);
+      if (!res.es_pagable) {
+        excluded.push({
+          ...d,
+          reason: 'La cuota mínima no cubre los intereses y gastos fijos.'
+        });
+      }
       return res.es_pagable;
     });
 
@@ -89,6 +96,8 @@ export class DebtMath {
     let mesGlobal = 0;
     let fluxExtra = parseFloat(extraMonthly) || 0;
     const history = [];
+    let totalPaid = 0;
+    let totalInterest = 0;
 
     while (debts.some(d => d.activa) && mesGlobal < 1200) {
       mesGlobal += 1;
@@ -101,9 +110,18 @@ export class DebtMath {
         const em = this.eaToEm(d.ea);
         const interesMes = d.monto * em;
         const gastos = (d.cuotaManejo || 0) + (d.seguros || 0);
-        const pagoBase = d.cuotaMinima;
+        let pagoBase = d.cuotaMinima;
+
+        // If debt is almost paid
+        if (d.monto + interesMes + gastos < pagoBase) {
+          pagoBase = d.monto + interesMes + gastos;
+        }
 
         const abonoCap = pagoBase - interesMes - gastos;
+        
+        totalInterest += interesMes + gastos;
+        totalPaid += pagoBase;
+
         if (abonoCap > 0) d.monto -= abonoCap;
 
         if (d.monto <= 0) {
@@ -112,7 +130,7 @@ export class DebtMath {
           releasedQuotas += d.cuotaMinima;
           history.push({ 
             type: 'success', 
-            text: `Mes ${mesGlobal}: ¡Deuda '${d.nombre}' saldada! Liberas $${pagoBase.toLocaleString()}/mes`
+            text: `Mes ${mesGlobal}: ¡Deuda '${d.nombre}' saldada! Liberas $${d.cuotaMinima.toLocaleString()}/mes`
           });
         }
       }
@@ -133,6 +151,8 @@ export class DebtMath {
         if (target) {
           const apply = Math.min(target.monto, currentExtra);
           target.monto -= apply;
+          totalPaid += apply;
+
           if (target.monto <= 0) {
             target.monto = 0;
             target.activa = false;
@@ -151,8 +171,30 @@ export class DebtMath {
 
     return {
       totalMonths: mesGlobal,
-      history: history
+      history: history,
+      excluded: excluded,
+      totalPaid: totalPaid,
+      totalInterest: totalInterest
     };
+  }
+
+  /**
+   * Returns current status quo (paying only minimums, no cascading).
+   */
+  static getStatusQuo(debtsRaw) {
+    let totalInterest = 0;
+    let worstMonth = 0;
+    let totalPaid = 0;
+    const initialBalance = debtsRaw.reduce((sum, d) => sum + (parseFloat(d.monto) || 0), 0);
+
+    for (const d of debtsRaw) {
+      const res = this.projectDebt(d.monto, d.ea, d.cuotaMinima, d.cuotaManejo || 0, d.seguros || 0, 0);
+      if (res.es_pagable) {
+        totalInterest += res.intereses_totales + res.otros_gastos_totales;
+        if (res.meses > worstMonth) worstMonth = res.meses;
+      }
+    }
+    return { totalMonths: worstMonth, totalInterest, totalPaid: initialBalance + totalInterest };
   }
 
   /**

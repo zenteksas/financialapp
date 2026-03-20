@@ -21,13 +21,13 @@ const DebtsModule = ({ debts, totals, onUpdate, currency }) => {
     setIsModalOpen(true);
   };
 
-  const handleSave = (data) => {
-    db.addDebt(data);
+  const handleSave = async (data) => {
+    await db.addDebt(data);
     onUpdate();
   };
 
-  const handleDelete = (id) => {
-    db.deleteDebt(id);
+  const handleDelete = async (id) => {
+    await db.deleteDebt(id);
     onUpdate();
   }
 
@@ -43,6 +43,7 @@ const DebtsModule = ({ debts, totals, onUpdate, currency }) => {
       <header style={styles.header}>
         <div>
           <h1 style={{ marginBottom: '4px' }}>Mis Deudas</h1>
+          {/* Ocultado a petición del usuario
           <div 
             style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
             onClick={() => setIsIncomeModalOpen(true)}
@@ -53,6 +54,7 @@ const DebtsModule = ({ debts, totals, onUpdate, currency }) => {
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Indice de Deuda</p>
           </div>
+          */}
         </div>
       </header>
 
@@ -161,7 +163,7 @@ const DebtsModule = ({ debts, totals, onUpdate, currency }) => {
                 Cerrar
               </button>
               <button 
-                onClick={() => { db.saveIncome(parseFloat(incomeInput) || 0); onUpdate(); setIsIncomeModalOpen(false); }}
+                onClick={async () => { await db.saveIncome(parseFloat(incomeInput) || 0); onUpdate(); setIsIncomeModalOpen(false); }}
                 style={modalStyles.saveBtn}
               >
                 Actualizar
@@ -183,7 +185,7 @@ const modalStyles = {
   modal: { width: '100%', maxWidth: '350px', padding: '24px', borderRadius: '24px' },
   input: {
     width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)',
-    border: '1px solid var(--glass-border)', color: 'white', outline: 'none'
+    border: '1px solid var(--glass-border)', color: 'var(--text-main)', outline: 'none'
   },
   saveBtn: { flex: 1, padding: '12px', borderRadius: '12px', background: 'var(--primary)', color: 'white', fontWeight: '600' },
   cancelBtn: { padding: '12px', color: 'var(--text-muted)', background: 'none' },

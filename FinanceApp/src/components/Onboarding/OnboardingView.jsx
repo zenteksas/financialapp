@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ChevronRight, ChevronLeft, Check, Wallet, Plus, Trash2,
   User, Smile, Star, Heart, Zap, Coffee, 
@@ -16,10 +16,14 @@ const AVATARS = [
   { id: 'Rocket', icon: Rocket, color: '#f97316' },
 ];
 
-const CURRENCIES = [
-  { code: 'COP', name: 'Peso Colombiano', symbol: '$' },
-  { code: 'USD', name: 'Dólar Estadounidense', symbol: '$' },
-  { code: 'EUR', name: 'Euro', symbol: '€' }
+const COUNTRIES = [
+  { code: 'CO', name: 'Colombia', currency: 'COP', symbol: '$', emoji: '🇨🇴' },
+  { code: 'US', name: 'Estados Unidos', currency: 'USD', symbol: '$', emoji: '🇺🇸' },
+  { code: 'ES', name: 'España', currency: 'EUR', symbol: '€', emoji: '🇪🇸' },
+  { code: 'MX', name: 'México', currency: 'MXN', symbol: '$', emoji: '🇲🇽' },
+  { code: 'AR', name: 'Argentina', currency: 'ARS', symbol: '$', emoji: '🇦🇷' },
+  { code: 'CL', name: 'Chile', currency: 'CLP', symbol: '$', emoji: '🇨🇱' },
+  { code: 'PE', name: 'Perú', currency: 'PEN', symbol: 'S/', emoji: '🇵🇪' }
 ];
 
 const ACCOUNT_COLORS = [
@@ -44,9 +48,14 @@ const OnboardingView = ({ onComplete }) => {
   const [step, setStep] = useState(1);
   const [data, setData] = useState({
     name: '',
+    country: 'CO',
     currency: 'COP',
-    avatar: 'User'
+    theme: 'dark'
   });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', data.theme);
+  }, [data.theme]);
 
   // Multiple accounts support
   const [accounts, setAccounts] = useState([
@@ -92,17 +101,18 @@ const OnboardingView = ({ onComplete }) => {
     onComplete({
       profile: {
         name: data.name,
-        avatar: data.avatar,
+        avatar: 'User',
         onboardingComplete: true
       },
       currency: data.currency,
+      theme: data.theme,
       accounts: initialAccounts
     });
   };
 
   const isNextDisabled = () => {
-    if (step === 1 && !data.name.trim()) return true;
-    if (step === 2 && !accounts[0].name.trim()) return true; // first account name required
+    if (step === 2 && !data.name.trim()) return true;
+    if (step === 3 && !accounts[0].name.trim()) return true; // first account name required
     return false;
   };
 
@@ -119,16 +129,43 @@ const OnboardingView = ({ onComplete }) => {
         {step === 1 && (
           <div className="animate-fade">
             <div style={styles.iconCircle}>
+              <Zap size={32} color="var(--primary)" />
+            </div>
+            <h1 style={styles.title}>¡Empecemos tu viaje!</h1>
+            <p style={styles.subtitle}>Te ayudaremos a organizar tu dinero en unos sencillos pasos.</p>
+            
+            <div style={{ backgroundColor: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '20px', marginBottom: '24px', border: '1px solid var(--glass-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                <div style={styles.stepBadge}>1</div>
+                <div style={{ textAlign: 'left' }}>
+                  <p style={{ fontWeight: '700', fontSize: '0.95rem' }}>Perfil y Ubicación</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Dinos cómo te llamas y dónde vives.</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                <div style={styles.stepBadge}>2</div>
+                <div style={{ textAlign: 'left' }}>
+                  <p style={{ fontWeight: '700', fontSize: '0.95rem' }}>Tus Cuentas</p>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Agrega tu saldo actual para empezar.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="animate-fade">
+            <div style={styles.iconCircle}>
               <User size={32} color="var(--primary)" />
             </div>
-            <h1 style={styles.title}>¡Bienvenido!</h1>
-            <p style={styles.subtitle}>Comencemos configurando tu perfil básico.</p>
+            <h1 style={styles.title}>¿Cómo te llamas?</h1>
+            <p style={styles.subtitle}>Configura tu perfil básico.</p>
             
             <div style={styles.inputGroup}>
-              <label style={styles.label}>¿Cómo te llamas?</label>
+              <label style={styles.label}>Tu nombre o apodo</label>
               <input 
                 type="text" 
-                placeholder="Tu nombre o apodo"
+                placeholder="Ej: Juan"
                 value={data.name}
                 onChange={e => setData({...data, name: e.target.value})}
                 style={styles.input}
@@ -137,24 +174,58 @@ const OnboardingView = ({ onComplete }) => {
             </div>
 
             <div style={styles.inputGroup}>
-              <label style={styles.label}>Divisa Principal</label>
-              <div style={styles.currencyGrid}>
-                {CURRENCIES.map(c => (
+              <label style={styles.label}>País de Residencia</label>
+              <div style={styles.countryGrid}>
+                {COUNTRIES.map(c => (
                   <button
                     key={c.code}
-                    onClick={() => setData({...data, currency: c.code})}
-                    style={styles.currencyBtn(data.currency === c.code)}
+                    onClick={() => setData({...data, country: c.code, currency: c.currency})}
+                    style={styles.currencyBtn(data.country === c.code)}
                   >
-                    <span style={{ fontWeight: '700' }}>{c.code}</span>
-                    <span style={{ fontSize: '0.7rem' }}>{c.name}</span>
+                    <span style={{ fontSize: '1.4rem' }}>{c.emoji}</span>
+                    <span style={{ fontWeight: '700', fontSize: '0.85rem' }}>{c.name}</span>
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Estilo visual de la App</label>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setData({...data, theme: 'dark'})}
+                  style={{
+                    flex: 1, padding: '16px', borderRadius: '16px', 
+                    border: data.theme === 'dark' ? '2px solid var(--secondary)' : '1px solid rgba(255,255,255,0.05)',
+                    fontWeight: '600', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                    backgroundColor: data.theme === 'dark' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                    color: data.theme === 'dark' ? 'white' : 'var(--text-muted)'
+                  }}
+                >
+                  <span style={{ fontSize: '1.5rem', marginBottom: '4px' }}>🌙</span>
+                  <span>Oscuro</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setData({...data, theme: 'light'})}
+                  style={{
+                    flex: 1, padding: '16px', borderRadius: '16px', 
+                    border: data.theme === 'light' ? '2px solid var(--secondary)' : '1px solid rgba(255,255,255,0.05)',
+                    fontWeight: '600', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                    backgroundColor: data.theme === 'light' ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                    color: data.theme === 'light' ? 'white' : 'var(--text-muted)'
+                  }}
+                >
+                  <span style={{ fontSize: '1.5rem', marginBottom: '4px' }}>☀️</span>
+                  <span>Claro</span>
+                </button>
               </div>
             </div>
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div className="animate-fade">
             <div style={styles.iconCircle}>
               <Wallet size={32} color="var(--secondary)" />
@@ -184,7 +255,7 @@ const OnboardingView = ({ onComplete }) => {
                   <div style={{ marginBottom: '10px' }}>
                     <input
                       type="text"
-                      placeholder={index === 0 ? 'Ej: Efectivo, Nequi, Bancolombia...' : 'Nombre de la cuenta'}
+                      placeholder={index === 0 ? 'Ej: Efectivo, Banco...' : 'Nombre de la cuenta'}
                       value={acc.name}
                       onChange={e => updateAccount(index, 'name', e.target.value)}
                       style={styles.input}
@@ -254,10 +325,7 @@ const OnboardingView = ({ onComplete }) => {
                     </div>
                     <div style={{ textAlign: 'left' }}>
                       <p style={{ fontSize: '0.82rem', fontWeight: '600', color: acc.includeInTotal ? '#10b981' : 'var(--text-muted)' }}>
-                        {acc.includeInTotal ? 'Incluida en el balance general' : 'Excluida del balance general'}
-                      </p>
-                      <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '1px' }}>
-                        {acc.includeInTotal ? 'Este dinero se suma al total' : 'Solo para control personal'}
+                        {acc.includeInTotal ? 'Incluida en el balance' : 'Excluida del balance'}
                       </p>
                     </div>
                   </button>
@@ -269,40 +337,6 @@ const OnboardingView = ({ onComplete }) => {
               <Plus size={18} style={{ marginRight: '6px' }} />
               Añadir otra cuenta
             </button>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="animate-fade">
-            <div style={styles.iconCircle}>
-              <Smile size={32} color="var(--accent)" />
-            </div>
-            <h1 style={styles.title}>Personaliza tu Avatar</h1>
-            <p style={styles.subtitle}>Elige un icono que te represente.</p>
-            
-            <div style={styles.avatarGrid}>
-              {AVATARS.map(ava => {
-                const Icon = ava.icon;
-                return (
-                  <button
-                    key={ava.id}
-                    onClick={() => setData({...data, avatar: ava.id})}
-                    style={styles.avatarBtn(data.avatar === ava.id, ava.color)}
-                  >
-                    <Icon size={24} />
-                  </button>
-                );
-              })}
-              <button
-                onClick={() => setData({...data, avatar: ''})}
-                style={styles.avatarBtn(data.avatar === '', '#94a3b8')}
-              >
-                <span style={{ fontWeight: '700', fontSize: '0.8rem' }}>Aa</span>
-              </button>
-            </div>
-            <p style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '12px' }}>
-              {data.avatar ? 'Usarás un icono como perfil.' : 'Se usarán tus iniciales como perfil.'}
-            </p>
           </div>
         )}
 
@@ -379,7 +413,7 @@ const styles = {
   label: { display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-muted)', marginBottom: '10px', marginLeft: '4px' },
   input: {
     width: '100%', padding: '14px 16px', borderRadius: '16px', backgroundColor: 'rgba(255,255,255,0.05)',
-    border: '1px solid var(--glass-border)', color: 'white', fontSize: '1rem', outline: 'none',
+    border: '1px solid var(--glass-border)', color: 'var(--text-main)', fontSize: '1rem', outline: 'none',
     boxSizing: 'border-box',
   },
   accountCard: {
@@ -409,6 +443,11 @@ const styles = {
     border: '1px solid ' + (active ? 'var(--primary)' : 'var(--glass-border)'),
     display: 'flex', flexDirection: 'column', gap: '4px', cursor: 'pointer',
   }),
+  stepBadge: {
+    width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(74, 222, 128, 0.2)',
+    color: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '1.2rem', flexShrink: 0
+  },
+  countryGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px' },
   avatarGrid: {
     display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px',
     justifyItems: 'center',

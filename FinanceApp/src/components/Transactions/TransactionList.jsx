@@ -3,6 +3,13 @@ import { Plus, Search, Tag, Settings, Building2, Wallet, PiggyBank, CreditCard, 
 
 const ICONS = { Building2, Wallet, PiggyBank, CreditCard, Coins };
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  // Avoid parser shifts by adding midday time
+  const date = new Date(dateStr + 'T12:00:00');
+  return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).replace('.', '');
+};
+
 const TransactionList = ({ transactions, categories, accounts, onAddClick, onAccountClick, onAddAccount, currency }) => {
   return (
     <div className="animate-fade">
@@ -62,7 +69,7 @@ const TransactionList = ({ transactions, categories, accounts, onAddClick, onAcc
                     <p style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       {fromAcc.name} <MoveRight size={14} /> {toAcc.name}
                     </p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{tx.date} • Transferencia</p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatDate(tx.date)} • Transferencia</p>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <p style={{ fontWeight: '700', color: 'var(--text-main)' }}>
@@ -81,7 +88,7 @@ const TransactionList = ({ transactions, categories, accounts, onAddClick, onAcc
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontWeight: '600' }}>{tx.note || category.name}</p>
-                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{tx.date}</p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatDate(tx.date)}</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={styles.amount(tx.type)}>

@@ -6,11 +6,11 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency })
     nombre: '',
     monto: '',
     ea: '',
-    cuotas: '0',
+    cuotas: '',
     cuotaMinima: '',
-    cuotaManejo: '0',
-    seguros: '0',
-    abonoAdicional: '0',
+    cuotaManejo: '',
+    seguros: '',
+    abonoAdicional: '',
   });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -27,11 +27,11 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency })
           nombre: '',
           monto: '',
           ea: '',
-          cuotas: '0',
+          cuotas: '',
           cuotaMinima: '',
-          cuotaManejo: '0',
-          seguros: '0',
-          abonoAdicional: '0',
+          cuotaManejo: '',
+          seguros: '',
+          abonoAdicional: '',
         });
       }
       setShowAdvanced(false);
@@ -39,6 +39,18 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency })
   }, [isOpen, initialData]);
 
   if (!isOpen) return null;
+
+  const formatAmountDisplay = (val) => {
+    if (val === null || val === undefined || val === '') return '';
+    const numericStr = val.toString().replace(/\D/g, '');
+    if (!numericStr) return '';
+    return numericStr.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  };
+
+  const handleAmountChange = (e, field) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    setFormData(prev => ({ ...prev, [field]: rawValue }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -88,10 +100,11 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency })
             <label style={styles.label}>Monto Adeudado ({currency})</label>
             <input
               name="monto"
-              type="number"
-              placeholder="0.00"
-              value={formData.monto}
-              onChange={handleChange}
+              type="text"
+              inputMode="numeric"
+              placeholder="0"
+              value={formatAmountDisplay(formData.monto)}
+              onChange={(e) => handleAmountChange(e, 'monto')}
               style={styles.input}
               required
             />
@@ -115,10 +128,11 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency })
               <label style={styles.label}>Cuota Mínima ({currency})</label>
               <input
                 name="cuotaMinima"
-                type="number"
-                placeholder="0.00"
-                value={formData.cuotaMinima}
-                onChange={handleChange}
+                type="text"
+                inputMode="numeric"
+                placeholder="0"
+                value={formatAmountDisplay(formData.cuotaMinima)}
+                onChange={(e) => handleAmountChange(e, 'cuotaMinima')}
                 style={styles.input}
                 required
               />
@@ -137,12 +151,14 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency })
             <div className="animate-fade">
               <div style={styles.row}>
                 <div style={{ flex: 1 }}>
-                  <label style={styles.label}>Manejo</label>
+                  <label style={styles.label}>Cuota de Manejo</label>
                   <input
                     name="cuotaManejo"
-                    type="number"
-                    value={formData.cuotaManejo}
-                    onChange={handleChange}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={formatAmountDisplay(formData.cuotaManejo)}
+                    onChange={(e) => handleAmountChange(e, 'cuotaManejo')}
                     style={styles.input}
                   />
                 </div>
@@ -150,9 +166,11 @@ const DebtModal = ({ isOpen, onClose, onSave, onDelete, initialData, currency })
                   <label style={styles.label}>Seguros</label>
                   <input
                     name="seguros"
-                    type="number"
-                    value={formData.seguros}
-                    onChange={handleChange}
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={formatAmountDisplay(formData.seguros)}
+                    onChange={(e) => handleAmountChange(e, 'seguros')}
                     style={styles.input}
                   />
                 </div>
@@ -200,20 +218,22 @@ const styles = {
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.85)',
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: 'column',
+    paddingTop: '60px',
     zIndex: 2000,
-    padding: '20px',
-    backdropFilter: 'blur(8px)',
+    backdropFilter: 'blur(4px)',
   },
   modal: {
-    width: '100%',
+    margin: 'auto 16px 24px 16px',
+    width: 'calc(100% - 32px)',
     maxWidth: '500px',
     borderRadius: '28px',
-    padding: '28px',
+    padding: '24px',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
     maxHeight: '90vh',
     display: 'flex',
     flexDirection: 'column',
+    border: '1px solid var(--glass-border)',
   },
   header: {
     display: 'flex',
@@ -223,7 +243,10 @@ const styles = {
   },
   scrollArea: {
     overflowY: 'auto',
+    flex: 1,
+    minHeight: 0,
     paddingRight: '4px',
+    marginRight: '-4px',
   },
   closeBtn: {
     background: 'none',

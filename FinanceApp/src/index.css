@@ -17,6 +17,22 @@
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+:root[data-theme="light"] {
+  --bg-color: #f1f5f9;      /* Soft grayish ground */
+  --surface-color: #ffffff;  /* Pure white */
+  --surface-hover: #f8fafc;
+  --primary: #15803d;       /* Strong visible green */
+  --primary-glow: rgba(21, 128, 61, 0.2);
+  --secondary: #16a34a;     /* Bright green */
+  --accent: #d97706;        /* Golden */
+  --danger: #ef4444;
+  --text-main: #334155;
+  --text-muted: #64748b;
+  --text-heading: #0f172a;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(0, 0, 0, 0.05);
+}
+
 .sidebar-drawer {
   position: fixed;
   top: 0;
@@ -172,4 +188,36 @@ select option {
   background-color: var(--surface-color);
   color: var(--text-main);
 }
+
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+  .sidebar-drawer, .sidebar-overlay, .tabBar, .header, .addBtn, button:not(.exportBtn) {
+    display: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .glass {
+    border: 1px solid #ddd !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    color: black !important;
+  }
+  * {
+    color: black !important;
+  }
+  .strategy-print-target {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+
 

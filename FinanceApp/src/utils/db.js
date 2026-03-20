@@ -42,7 +42,26 @@ export const db ={
   },
 
   // Transactions
-  getTransactions: async () => await db._get(DB_KEYS.TRANSACTIONS),
+  getTransactions: async () => {
+    const list = await db._get(DB_KEYS.TRANSACTIONS);
+    
+    // Migration: ensure all transactions have a 'date' property (YYYY-MM-DD)
+    let hasChanges = false;
+    const migratedList = list.map(tx => {
+      if (!tx.date) {
+        hasChanges = true;
+        const d = new Date(parseInt(tx.id));
+        return { ...tx, date: d.toISOString().split('T')[0] };
+      }
+      return tx;
+    });
+
+    if (hasChanges) {
+      await db._save(DB_KEYS.TRANSACTIONS, migratedList);
+    }
+    
+    return migratedList;
+  },
   addTransaction: async (transaction) => {
     const list = await db.getTransactions();
     if (transaction.id) {
@@ -57,6 +76,11 @@ export const db ={
       // Create new transaction
       list.unshift({ ...transaction, id: Date.now().toString() });
     }
+    await db._save(DB_KEYS.TRANSACTIONS, list);
+    return list;
+  },
+  deleteTransaction: async (id) => {
+    const list = (await db.getTransactions()).filter(t => t.id !== id);
     await db._save(DB_KEYS.TRANSACTIONS, list);
     return list;
   },
@@ -166,10 +190,32 @@ export const db ={
     const list = await db.getReminders();
     const idx = list.findIndex(r => r.id === id);
     if (idx !== -1) {
-      list[idx].completed = !list[idx].completed;
+      const rem = list[idx];
+      // If it's recurring and we are marking it as COMPLETE (from false to true)
+      if (rem.recurrence && rem.recurrence !== 'none' && !rem.completed) {
+        rem.date = db._calculateNextDate(rem.date, rem.recurrence);
+        // It stays as completed: false but for the new date
+      } else {
+        rem.completed = !rem.completed;
+      }
       await db._save(DB_KEYS.REMINDERS, list);
     }
     return list;
+  },
+
+  _calculateNextDate: (currentDateStr, recurrence) => {
+    // We add T12:00:00 to avoid timezone shifts that might move the date back
+    const date = new Date(currentDateStr + 'T12:00:00');
+    
+    if (recurrence === 'daily') date.setDate(date.getDate() + 1);
+    else if (recurrence === 'weekly') date.setDate(date.getDate() + 7);
+    else if (recurrence === 'monthly') date.setMonth(date.getMonth() + 1);
+    else if (recurrence === 'yearly') date.setFullYear(date.getFullYear() + 1);
+    
+    const y = date.getFullYear();
+    const m = (date.getMonth() + 1).toString().padStart(2, '0');
+    const d = date.getDate().toString().padStart(2, '0');
+    return `${y}-${m}-${d}`;
   },
 
   // Notifications Logic
@@ -271,16 +317,40 @@ export const db ={
     await db._save(DB_KEYS.USER_PREFS, { ...prefs, scheduledPayments: sp });
   },
 
+  // Debt Strategy Prefs
+  getDebtPrefs: async () => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS);
+    return {
+      strategy: prefs.debtStrategy || 'snowball',
+      extraMonthly: prefs.debtExtraMonthly || 0
+    };
+  },
+  saveDebtPrefs: async (strategy, extraMonthly) => {
+    const prefs = await db._get(DB_KEYS.USER_PREFS);
+    await db._save(DB_KEYS.USER_PREFS, { 
+      ...prefs, 
+      debtStrategy: strategy, 
+      debtExtraMonthly: extraMonthly 
+    });
+  },
+
   // Currency
   getCurrency: async () => {
     return (await storage.get(DB_KEYS.CURRENCY)) || 'COP';
   },
   getCurrencySync: () => {
-    // Legacy fallback for some UI parts if needed, but we should aim to avoid it
     return 'COP'; 
   },
   saveCurrency: async (currency) => {
     await storage.set(DB_KEYS.CURRENCY, currency);
+  },
+
+  // Theme
+  getTheme: async () => {
+    return (await storage.get('finance_theme')) || 'dark';
+  },
+  saveTheme: async (theme) => {
+    await storage.set('finance_theme', theme);
   },
 
   // Profile
@@ -400,7 +470,8 @@ export const db ={
     const now = new Date();
     
     return txs.filter(tx => {
-      const txDate = new Date(parseInt(tx.id));
+      // Use tx.date (YYYY-MM-DD) if available, fallback to id timestamp
+      const txDate = tx.date ? new Date(tx.date + 'T12:00:00') : new Date(parseInt(tx.id));
       
       if (period === 'day') {
         return txDate.toDateString() === now.toDateString();

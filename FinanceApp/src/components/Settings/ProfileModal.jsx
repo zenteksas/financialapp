@@ -112,7 +112,7 @@ const modalStyles = {
   label: { display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px', marginLeft: '4px' },
   input: {
     width: '100%', padding: '14px', borderRadius: '14px', backgroundColor: 'rgba(255,255,255,0.05)',
-    border: '1px solid var(--glass-border)', color: 'white', outline: 'none'
+    border: '1px solid var(--glass-border)', color: 'var(--text-main)', outline: 'none'
   },
   avatarGrid: {
     display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px',

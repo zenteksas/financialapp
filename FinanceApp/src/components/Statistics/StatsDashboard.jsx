@@ -4,6 +4,12 @@ import { ChevronLeft, ChevronRight, Utensils, Car, Home, ShoppingBag, Heart, Gam
 
 const ICONS = { Utensils, Car, Home, ShoppingBag, Heart, Gamepad, Briefcase, GraduationCap, Plane, Coffee, Tv, Zap, Smartphone, PiggyBank, Receipt, Tag };
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr + 'T12:00:00');
+  return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }).replace('.', '');
+};
+
 const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountId, accounts, currency, userProfile, onEditGoals, onEditTransaction }) => {
   const [type, setType] = useState('expense');
   const [period, setPeriod] = useState('semana');
@@ -34,7 +40,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
     // Filter by period
     const now = new Date();
     const periodFiltered = filteredTxs.filter(tx => {
-      const txDate = new Date(parseInt(tx.id));
+      const txDate = tx.date ? new Date(tx.date + 'T12:00:00') : new Date(parseInt(tx.id));
       if (period === 'día') {
         return txDate.toDateString() === now.toDateString();
       }
@@ -98,7 +104,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
 
     setSeries(breakdown.map(b => b.amount));
     setChartOptions({
-      chart: { type: 'donut', background: 'transparent' },
+      chart: { type: 'donut', background: 'transparent', toolbar: { show: false }, animations: { enabled: true } },
       labels: breakdown.map(b => b.name),
       colors: breakdown.map(b => b.color),
       stroke: { show: false },
@@ -110,7 +116,31 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
           donut: {
             size: '75%',
             labels: {
-              show: false
+              show: true,
+              name: {
+                show: true,
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'var(--text-muted)',
+                offsetY: -10,
+                formatter: () => 'TOTAL'
+              },
+              value: {
+                show: true,
+                fontSize: '20px',
+                fontWeight: 800,
+                color: 'var(--text-heading)',
+                offsetY: 10,
+                formatter: (val) => `${formatCompactNumber(parseFloat(val))} ${currency}`
+              },
+              total: {
+                show: true,
+                label: 'TOTAL',
+                color: 'var(--text-muted)',
+                fontSize: '12px',
+                fontWeight: 600,
+                formatter: () => `${formatCompactNumber(grandTotal)} ${currency}`
+              }
             }
           }
         }
@@ -171,7 +201,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
   }, [grandTotal, currency]);
 
   return (
-    <div className="animate-fade">
+    <div className="animate-fade" style={{ width: '100%' }}>
 
       <div style={styles.topNav}>
         <div style={styles.tabs}>
@@ -214,7 +244,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
         </div>
       )}
 
-      <div className="glass" style={styles.chartCard}>
+      <div style={styles.chartAreaWrapper}>
         <div style={styles.rangeNav}>
           <ChevronLeft size={20} style={{ opacity: 0.5 }} />
           <span>{rangeLabel}</span>
@@ -222,17 +252,17 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
         </div>
 
         <div style={styles.chartContainer}>
+          <div style={styles.chartGlow} />
           {series.length > 0 ? (
-            <div style={{ width: '100%', textAlign: 'center' }}>
-              <Chart options={chartOptions} series={series} type="donut" height="280" />
-            </div>
+            <Chart options={chartOptions} series={series} type="donut" height="100%" />
           ) : (
             <div style={styles.noData}>No hay datos en este periodo</div>
           )}
         </div>
 
-        <button onClick={onAddClick} style={styles.addBtn}>
-          <Plus size={24} />
+        <button onClick={() => onAddClick(type)} style={styles.addBtnFloating}>
+          <Plus size={20} />
+          <span>Nuevo {type === 'expense' ? 'Gasto' : 'Ingreso'}</span>
         </button>
       </div>
 
@@ -275,7 +305,7 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
                       >
                         <div style={{ flex: 1 }}>
                           <p style={{ fontSize: '0.85rem', fontWeight: '500' }}>{tx.note || 'Sin nota'}</p>
-                          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{tx.date}</p>
+                          <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{formatDate(tx.date)}</p>
                         </div>
                         <p style={{ fontWeight: '600', color: type === 'income' ? 'var(--secondary)' : 'var(--danger)', fontSize: '0.85rem' }}>
                           {tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
@@ -290,45 +320,6 @@ const StatsDashboard = ({ transactions, categories, onAddClick, selectedAccountI
         </div>
       </div>
 
-      <div style={{ marginTop: '32px', marginBottom: '40px' }}>
-        <div 
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '8px 0' }}
-          onClick={() => setIsActivityExpanded(!isActivityExpanded)}
-        >
-          <h4 style={{ color: 'var(--text-muted)', fontSize: '0.85rem', letterSpacing: '0.05em' }}>ACTIVIDAD RECIENTE</h4>
-          <div style={{ transform: isActivityExpanded ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 0.3s', color: 'var(--text-muted)' }}>
-            <ChevronDown size={18} />
-          </div>
-        </div>
-
-        {isActivityExpanded && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
-            {currentPeriodFilteredTxs.filter(t => t.type === type).length === 0 ? (
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center', padding: '20px' }}>No hay actividad para mostrar.</p>
-            ) : (
-              currentPeriodFilteredTxs.filter(t => t.type === type).slice(0, 5).map(tx => (
-                <div 
-                  key={tx.id} 
-                  className="glass" 
-                  style={{ ...styles.activityItem, cursor: 'pointer' }}
-                  onClick={() => onEditTransaction(tx)}
-                >
-                  <div style={styles.activityIcon(type === 'income' ? 'var(--secondary)' : 'var(--danger)')}>
-                    {type === 'income' ? <Plus size={16} /> : <Minus size={16} />}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontWeight: '600', fontSize: '0.9rem' }}>{tx.note || (categories.find(c => c.id === tx.categoryId)?.name) || 'Transacción'}</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{tx.date}</p>
-                  </div>
-                  <p style={{ fontWeight: '700', color: type === 'income' ? 'var(--secondary)' : 'var(--danger)', fontSize: '0.95rem' }}>
-                    {type === 'income' ? '+' : '-'}{tx.amount.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} {currency}
-                  </p>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-      </div>
     </div>
   );
 };
@@ -344,32 +335,56 @@ const styles = {
     transition: 'all 0.2s'
   }),
   periods: { 
-    display: 'flex', justifyContent: 'space-between', marginBottom: '16px',
-    padding: '0 8px'
+    display: 'grid', 
+    gridTemplateColumns: 'repeat(5, 1fr)',
+    marginBottom: '16px',
+    padding: '0 8px',
+    width: '100%',
+    boxSizing: 'border-box'
   },
   periodBtn: (active) => ({
-    padding: '6px 0', background: 'none', border: 'none',
+    padding: '6px 0', 
+    background: 'none', 
+    border: 'none',
     color: active ? 'var(--secondary)' : 'var(--text-muted)',
-    fontSize: '0.85rem', fontWeight: '400', cursor: 'pointer',
-    borderBottom: active ? '2px solid var(--secondary)' : '2px solid transparent'
+    fontSize: '0.85rem', 
+    fontWeight: '400', 
+    cursor: 'pointer',
+    borderBottom: active ? '2px solid var(--secondary)' : '2px solid transparent',
+    flex: 1,
+    textAlign: 'center'
   }),
-  chartCard: {
-    padding: '24px', borderRadius: '28px', position: 'relative',
-    backgroundColor: '#1C1C17', // Consistent dark tone
-    minHeight: '420px',
+  chartAreaWrapper: {
+    padding: '20px 0',
+    position: 'relative',
+    height: '380px',
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
+    alignItems: 'center',
+    overflow: 'visible',
+    boxSizing: 'border-box'
   },
   rangeNav: {
     display: 'flex', justifyContent: 'center', alignItems: 'center',
     gap: '24px', marginBottom: '16px', fontSize: '0.9rem', color: 'var(--text-main)'
   },
   chartContainer: { 
-    flex: 1,
+    width: '100%',
+    height: '260px',
     display: 'flex', 
-    flexDirection: 'column', 
     alignItems: 'center', 
-    justifyContent: 'center' 
+    justifyContent: 'center',
+    position: 'relative',
+    flex: 'none'
+  },
+  chartGlow: {
+    position: 'absolute',
+    width: '160px',
+    height: '160px',
+    borderRadius: '50%',
+    background: 'radial-gradient(circle, var(--primary-glow) 0%, transparent 70%)',
+    zIndex: 0,
+    opacity: 0.5
   },
   chartFooter: {
     marginTop: '16px',
@@ -389,11 +404,14 @@ const styles = {
     margin: '4px 0'
   },
   noData: { color: 'var(--text-muted)', fontSize: '0.9rem' },
-  addBtn: {
-    position: 'absolute', right: '16px', bottom: '16px', width: '48px', height: '48px',
-    borderRadius: '24px', backgroundColor: '#fbbf24', border: 'none',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.3)', cursor: 'pointer'
+  addBtnFloating: {
+    marginTop: '12px',
+    padding: '12px 24px', borderRadius: '24px', 
+    backgroundColor: '#fbbf24', border: 'none',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#000',
+    boxShadow: '0 8px 24px rgba(251, 191, 36, 0.3)', cursor: 'pointer',
+    fontSize: '0.9rem', fontWeight: '800', transition: 'all 0.2s',
+    zIndex: 2
   },
   categoryList: { display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' },
   catItem: {

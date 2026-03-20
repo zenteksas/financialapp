@@ -106,7 +106,7 @@ const styles = {
   label: { display: 'block', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '8px' },
   input: {
     width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)',
-    border: '1px solid var(--glass-border)', color: 'white', outline: 'none'
+    border: '1px solid var(--glass-border)', color: 'var(--text-main)', outline: 'none'
   },
   simBtn: {
     width: '100%', padding: '16px', borderRadius: '16px', backgroundColor: 'var(--accent)',
